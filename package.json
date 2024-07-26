@@ -11,10 +11,15 @@
     "@solidjs/meta": "^0.29.4",
     "@solidjs/router": "^0.14.1",
     "@solidjs/start": "^1.0.6",
+    "prettier-plugin-organize-imports": "^4.0.0",
+    "solid-bootstrap": "^1.0.20",
     "solid-js": "^1.8.18",
     "vinxi": "^0.4.1"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
   }
 }
