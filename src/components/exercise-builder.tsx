@@ -55,7 +55,7 @@ export default function ExerciseBuilder() {
         onChange={(e) => setShowTonicIndication(e.target.checked)}
       />
       <Form.Group class="mb-3" controlId="formBasicEmail">
-        <Form.Label>Key</Form.Label>
+        <Form.Label>Scale Degrees</Form.Label>
         <form.Field name="scaleDegrees">
           {(field) => (
             <ButtonGroupMultiSelect
