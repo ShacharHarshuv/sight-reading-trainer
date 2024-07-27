@@ -1,26 +1,25 @@
-import {
-  Button,
-  ButtonGroup,
-  Stack,
-} from "solid-bootstrap";
+import { clientOnly } from "@solidjs/start";
+import { Button, ButtonGroup, Stack } from "solid-bootstrap";
+import { FaSolidChevronDown, FaSolidChevronUp } from "solid-icons/fa";
 import { createMemo } from "solid-js";
 import { naturalPitchClassNumberToAbcPitch } from "~/model/natural-pitch-class-number";
 import { NaturalRange } from "~/model/natural-range";
-import { clientOnly } from '@solidjs/start';
-import {
-  FaSolidChevronDown,
-  FaSolidChevronUp,
-} from 'solid-icons/fa';
 
 const Notation = clientOnly(() => import("~/components/notation"));
 
 export function RangePicker(props: {
+  clef?: "bass" | "treble";
   value: NaturalRange;
   onChange: (value: NaturalRange) => void;
 }) {
   const notes = createMemo(() =>
     props.value.map(naturalPitchClassNumberToAbcPitch),
   );
+  const clef = createMemo(() => props.clef ?? "treble");
+  const notation = createMemo(() => {
+    return `V: 1 clef=${clef()}\n` + `[${notes().join("")}]8`;
+  });
+
   const bottom = () => props.value[0];
   const top = () => props.value[1];
 
@@ -47,11 +46,11 @@ export function RangePicker(props: {
         </Button>
       </ButtonGroup>
     );
-  }
+  };
 
   return (
     <>
-      <Stack direction="horizontal" >
+      <Stack direction="horizontal">
         <div style="width: 70px">
           <Stack>
             {buttons([0, 1])}
@@ -60,7 +59,7 @@ export function RangePicker(props: {
         </div>
         <div style="height: 100px; position: relative; top: -12px">
           <Notation
-            notation={`[${notes().join("")}]8`}
+            notation={notation()}
             options={{
               staffwidth: 70,
             }}

@@ -34,7 +34,7 @@ export default function ExerciseNotation(props: {
 
     return {
       rightHand: createTonicNotesIndicationNotation(
-        props.exerciseSettings.range,
+        props.exerciseSettings.rhRange,
       ),
       leftHand: createTonicNotesIndicationNotation(naturalRange("C,,", "E")),
     };

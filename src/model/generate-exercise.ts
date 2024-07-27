@@ -16,9 +16,10 @@ import { isDefined } from "~/ts-utils/is-defined";
 export interface ExerciseSettings {
   numberOfSegments: number;
   scaleDegrees: readonly ScaleDegree[];
-  hand: 'left' | 'right';
+  hand: "left" | "right";
   tonic: PitchClass;
-  range: NaturalRange;
+  rhRange: NaturalRange;
+  lhRange: NaturalRange;
   maxInterval: number;
   maxOverallRange: number;
 }
@@ -28,7 +29,7 @@ export function generateExercise(config: ExerciseSettings) {
   let highestOption: AbcPitch | null = null;
   let lowestOption: AbcPitch | null = null;
   return new Array(config.numberOfSegments).fill(null).map(() => {
-    const consumerLimit = config.range;
+    const consumerLimit = config.rhRange;
     const maxIntervalLimit =
       lastOption && naturalRangeFrom(lastOption, config.maxInterval);
     const overallLimit = ((): NaturalRange | null => {

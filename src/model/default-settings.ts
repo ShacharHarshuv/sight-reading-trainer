@@ -7,7 +7,8 @@ export const defaultSettings: ExerciseSettings = {
   scaleDegrees: diatonicScaleDegrees,
   hand: "right",
   tonic: "C",
-  range: naturalRange("A,", "C''"),
+  rhRange: naturalRange("A,", "C''"),
+  lhRange: naturalRange("C,,", "E"),
   maxInterval: 7,
   maxOverallRange: 11,
 };

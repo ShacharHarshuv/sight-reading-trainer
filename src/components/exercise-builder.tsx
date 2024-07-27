@@ -1,7 +1,7 @@
 import { clientOnly } from "@solidjs/start";
 import { createForm } from "@tanstack/solid-form";
 import { Button, ButtonGroup, Col, Form, Row, Stack } from "solid-bootstrap";
-import { createSignal } from "solid-js";
+import { Show, createSignal } from "solid-js";
 import { ButtonGroupMultiSelect } from "~/components/form/button-group-multi-select";
 import { ButtonGroupSelect } from "~/components/form/button-group-select";
 import { NumberField } from "~/components/form/number-field";
@@ -26,7 +26,9 @@ export default function ExerciseBuilder() {
 
   const exerciseSettings = form.useStore((state) => state.values);
   const canSubmit = form.useStore((state) => state.canSubmit);
-  const defaultRange: NaturalRange = [...defaultSettings.range]; // for some reason defaultSettings is being overridden, though it really shouldn't
+  const defaultRhRange: NaturalRange = [...defaultSettings.rhRange]; // for some reason defaultSettings is being overridden, though it really shouldn't
+  const defaultLhRange: NaturalRange = [...defaultSettings.lhRange]; // for some reason defaultSettings is being overridden, though it really shouldn't
+  const selectedHand = form.useStore((state) => state.values.hand);
 
   return (
     <div>
@@ -135,25 +137,52 @@ export default function ExerciseBuilder() {
           </form.Field>
         </Form.Group>
         <Form.Group as={Col}>
-          <form.Field name="range">
-            {(field) => (
-              <>
-                <Form.Label>
-                  Range
-                  <Button
-                    variant="link"
-                    onClick={() => field().handleChange(defaultRange)}
-                  >
-                    reset
-                  </Button>
-                </Form.Label>
-                <RangePicker
-                  value={field().state.value}
-                  onChange={field().handleChange}
-                />
-              </>
-            )}
-          </form.Field>
+          <Show
+            when={selectedHand() === "right"}
+            children={
+              <form.Field name="rhRange">
+                {(field) => (
+                  <>
+                    <Form.Label>
+                      Range
+                      <Button
+                        variant="link"
+                        onClick={() => field().handleChange(defaultRhRange)}
+                      >
+                        reset
+                      </Button>
+                    </Form.Label>
+                    <RangePicker
+                      value={field().state.value}
+                      onChange={field().handleChange}
+                    />
+                  </>
+                )}
+              </form.Field>
+            }
+            fallback={
+              <form.Field name="lhRange">
+                {(field) => (
+                  <>
+                    <Form.Label>
+                      Range
+                      <Button
+                        variant="link"
+                        onClick={() => field().handleChange(defaultLhRange)}
+                      >
+                        reset
+                      </Button>
+                    </Form.Label>
+                    <RangePicker
+                      clef="bass"
+                      value={field().state.value}
+                      onChange={field().handleChange}
+                    />
+                  </>
+                )}
+              </form.Field>
+            }
+          />
         </Form.Group>
       </Row>
       <Button disabled={!canSubmit()} onClick={() => setSeed((seed) => ++seed)}>
