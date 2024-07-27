@@ -25,9 +25,9 @@ export default function ExerciseBuilder() {
     },
   }));
   const [seed, setSeed] = createSignal(1);
+  const [showTonicIndication, setShowTonicIndication] = createSignal(false);
 
   const exerciseSettings = form.useStore((state) => state.values);
-
   const canSubmit = form.useStore((state) => state.canSubmit);
 
   return (
@@ -44,11 +44,19 @@ export default function ExerciseBuilder() {
           )}
         </form.Field>
       </Form.Group>
+      <Form.Check
+        class="mb-3"
+        type="checkbox"
+        id="showTonicIndication"
+        label="Show Tonic Indication"
+        checked={showTonicIndication()}
+        onChange={(e) => setShowTonicIndication(e.target.checked)}
+      />
       <Button disabled={!canSubmit()} onClick={() => setSeed((seed) => ++seed)}>
         Generate
       </Button>
       <ExerciseNotation
-        showTonicIndication={false}
+        showTonicIndication={showTonicIndication()}
         exerciseSettings={exerciseSettings()}
         seed={seed()}
       />
