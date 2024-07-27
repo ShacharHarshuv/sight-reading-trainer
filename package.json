@@ -12,7 +12,9 @@
     "@solidjs/router": "^0.14.1",
     "@solidjs/start": "^1.0.6",
     "@tanstack/solid-form": "^0.26.4",
+    "abcjs": "^6.4.1",
     "bootstrap": "^5.3.3",
+    "lodash": "^4.17.21",
     "prettier-plugin-organize-imports": "^4.0.0",
     "solid-bootstrap": "^1.0.20",
     "solid-js": "^1.8.18",
@@ -22,6 +24,7 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.7",
     "prettier": "^3.3.3"
   }
 }
