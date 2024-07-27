@@ -1,22 +1,15 @@
 import { clientOnly } from "@solidjs/start";
 import { createForm } from "@tanstack/solid-form";
-import { Button, Form } from "solid-bootstrap";
+import { Button, Col, Form, Row } from "solid-bootstrap";
 import { createSignal } from "solid-js";
-import { ButtonGroupMultiSelect } from "~/components/button-group-multi-select";
-import { ButtonGroupSelect } from "~/components/button-group-select";
+import { ButtonGroupMultiSelect } from "~/components/form/button-group-multi-select";
+import { ButtonGroupSelect } from "~/components/form/button-group-select";
+import { NumberField } from "~/components/form/number-field";
 import { defaultSettings } from "~/model/default-settings";
 import { scaleDegreesOptions } from "~/model/options";
 import { pitchClasses } from "~/model/pitch-class";
 
 const ExerciseNotation = clientOnly(() => import("./exercise-notation"));
-
-function toNumber(value: string) {
-  if (!value) {
-    return undefined;
-  }
-  const parsed = Number(value);
-  return isNaN(parsed) ? undefined : parsed;
-}
 
 export default function ExerciseBuilder() {
   const form = createForm(() => ({
@@ -34,7 +27,7 @@ export default function ExerciseBuilder() {
 
   return (
     <div>
-      <Form.Group class="mb-3" controlId="formBasicEmail">
+      <Form.Group class="mb-3">
         <Form.Label>Key</Form.Label>
         <form.Field name="tonic">
           {(field) => (
@@ -66,6 +59,39 @@ export default function ExerciseBuilder() {
           )}
         </form.Field>
       </Form.Group>
+      <Row class="mb-3">
+        <Form.Group as={Col}>
+          <Form.Label>Max Interval</Form.Label>
+          <form.Field name="maxInterval">
+            {(field) => (
+              <>
+                <NumberField
+                  value={field().state.value}
+                  min={2}
+                  offset={1}
+                  onChange={(newValue) => field().handleChange(newValue)}
+                />
+              </>
+            )}
+          </form.Field>
+        </Form.Group>
+
+        <Form.Group as={Col}>
+          <Form.Label>Max Range</Form.Label>
+          <form.Field name="maxOverallRange">
+            {(field) => (
+              <>
+                <NumberField
+                  value={field().state.value}
+                  min={2}
+                  offset={1}
+                  onChange={(newValue) => field().handleChange(newValue)}
+                />
+              </>
+            )}
+          </form.Field>
+        </Form.Group>
+      </Row>
       <Button disabled={!canSubmit()} onClick={() => setSeed((seed) => ++seed)}>
         Generate
       </Button>
