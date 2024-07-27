@@ -1,22 +1,15 @@
 import { clientOnly } from "@solidjs/start";
 import { createForm } from "@tanstack/solid-form";
-import {
-  Button,
-  Col,
-  Form,
-  Row,
-  Stack,
-  ButtonGroup,
-} from "solid-bootstrap";
+import { Button, ButtonGroup, Col, Form, Row, Stack } from "solid-bootstrap";
 import { createSignal } from "solid-js";
 import { ButtonGroupMultiSelect } from "~/components/form/button-group-multi-select";
 import { ButtonGroupSelect } from "~/components/form/button-group-select";
 import { NumberField } from "~/components/form/number-field";
+import { RangePicker } from "~/components/form/range-picker";
 import { defaultSettings } from "~/model/default-settings";
+import { NaturalRange } from "~/model/natural-range";
 import { scaleDegreesOptions } from "~/model/options";
 import { pitchClasses } from "~/model/pitch-class";
-import { RangePicker } from '~/components/form/range-picker';
-import { NaturalRange } from '~/model/natural-range';
 
 const ExerciseNotation = clientOnly(() => import("./exercise-notation"));
 
@@ -57,25 +50,58 @@ export default function ExerciseBuilder() {
         checked={showTonicIndication()}
         onChange={(e) => setShowTonicIndication(e.target.checked)}
       />
-      <Form.Group class="mb-3" controlId="formBasicEmail">
-        <Form.Label>Scale Degrees</Form.Label>
-        <form.Field name="scaleDegrees">
-          {(field) => (
-            <Stack direction="horizontal" gap={2} >
-              <ButtonGroupMultiSelect
-                options={scaleDegreesOptions}
+      <Stack class="mb-3" direction="horizontal" gap={3}>
+        <Form.Group>
+          <Form.Label>Scale Degrees</Form.Label>
+          <form.Field name="scaleDegrees">
+            {(field) => (
+              <Stack direction="horizontal" gap={2}>
+                <ButtonGroupMultiSelect
+                  options={scaleDegreesOptions}
+                  value={field().state.value}
+                  onChange={(newValue) => field().handleChange(newValue)}
+                />
+                <ButtonGroup>
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => field().handleChange(["1", "3", "5"])}
+                  >
+                    Triad
+                  </Button>
+                  <Button
+                    variant="outline-secondary"
+                    onclick={() =>
+                      field().handleChange(["1", "2", "3", "5", "6"])
+                    }
+                  >
+                    Pentatonic
+                  </Button>
+                  <Button
+                    variant="outline-secondary"
+                    onclick={() =>
+                      field().handleChange(["1", "2", "3", "4", "5", "6", "7"])
+                    }
+                  >
+                    All
+                  </Button>
+                </ButtonGroup>
+              </Stack>
+            )}
+          </form.Field>
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Hand</Form.Label>
+          <form.Field name="hand">
+            {(field) => (
+              <ButtonGroupSelect
+                options={["left", "right"]}
                 value={field().state.value}
-                onChange={(newValue) => field().handleChange(newValue)}
+                onChange={field().handleChange}
               />
-              <ButtonGroup>
-                <Button variant="outline-secondary" onClick={() => field().handleChange(["1", "3", "5"])}>Triad</Button>
-                <Button variant="outline-secondary" onclick={() => field().handleChange(["1", "2", "3", "5", "6"])}>Pentatonic</Button>
-                <Button variant="outline-secondary" onclick={() => field().handleChange(["1", "2", "3", "4", "5", "6", "7"])}>All</Button>
-              </ButtonGroup>
-            </Stack>
-          )}
-        </form.Field>
-      </Form.Group>
+            )}
+          </form.Field>
+        </Form.Group>
+      </Stack>
       <Row class="mb-3">
         <Form.Group as={Col}>
           <Form.Label>Max Interval</Form.Label>
@@ -114,7 +140,12 @@ export default function ExerciseBuilder() {
               <>
                 <Form.Label>
                   Range
-                  <Button variant="link" onClick={() => field().handleChange(defaultRange)}>reset</Button>
+                  <Button
+                    variant="link"
+                    onClick={() => field().handleChange(defaultRange)}
+                  >
+                    reset
+                  </Button>
                 </Form.Label>
                 <RangePicker
                   value={field().state.value}

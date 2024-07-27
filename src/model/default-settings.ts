@@ -5,6 +5,7 @@ import { diatonicScaleDegrees } from "~/model/scale-degree";
 export const defaultSettings: ExerciseSettings = {
   numberOfSegments: 8 * 4,
   scaleDegrees: diatonicScaleDegrees,
+  hand: "right",
   tonic: "C",
   range: naturalRange("A,", "C''"),
   maxInterval: 7,

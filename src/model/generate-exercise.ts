@@ -16,6 +16,7 @@ import { isDefined } from "~/ts-utils/is-defined";
 export interface ExerciseSettings {
   numberOfSegments: number;
   scaleDegrees: readonly ScaleDegree[];
+  hand: 'left' | 'right';
   tonic: PitchClass;
   range: NaturalRange;
   maxInterval: number;
