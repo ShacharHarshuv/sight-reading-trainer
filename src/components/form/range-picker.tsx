@@ -1,11 +1,9 @@
-import { clientOnly } from "@solidjs/start";
 import { Button, ButtonGroup, Stack } from "solid-bootstrap";
 import { FaSolidChevronDown, FaSolidChevronUp } from "solid-icons/fa";
 import { createMemo } from "solid-js";
+import Notation from "~/components/notation";
 import { naturalPitchClassNumberToAbcPitch } from "~/model/natural-pitch-class-number";
 import { NaturalRange } from "~/model/natural-range";
-
-const Notation = clientOnly(() => import("~/components/notation"));
 
 export function RangePicker(props: {
   clef?: "bass" | "treble";
