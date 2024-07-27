@@ -1,8 +1,13 @@
-import { chunk } from "lodash";
+import { chunk, isEmpty } from "lodash";
 import { createMemo } from "solid-js";
 import Notation from "~/components/notation";
-import { ExerciseSettings, generateExercise } from "~/model/generate-exercise";
-import { NaturalRange, naturalRange } from "~/model/natural-range";
+import {
+  ExerciseSettings,
+  generateExercise,
+  LEFT_HAND_INDEX,
+  RIGHT_HAND_INDEX,
+} from "~/model/generate-exercise";
+import { NaturalRange } from "~/model/natural-range";
 import { scaleDegreeToAbcPitches } from "~/model/scale-degree-to-abc";
 
 export default function ExerciseNotation(props: {
@@ -32,13 +37,28 @@ export default function ExerciseNotation(props: {
       return `[${tonicNotes.join("")}]8 || `;
     }
 
-    return {
-      rightHand: createTonicNotesIndicationNotation(
-        props.exerciseSettings.rhRange,
-      ),
-      leftHand: createTonicNotesIndicationNotation(naturalRange("C,,", "E")),
-    };
+    return [
+      createTonicNotesIndicationNotation(props.exerciseSettings.rhRange),
+      createTonicNotesIndicationNotation(props.exerciseSettings.lhRange),
+    ];
   }, [props.exerciseSettings.tonic, props.showTonicIndication]);
+
+  function getNotationFor(
+    handIndex: typeof RIGHT_HAND_INDEX | typeof LEFT_HAND_INDEX,
+  ) {
+    return `${tonicNotesIndicationNotation()[handIndex]}${systems()
+      .map((system) =>
+        system
+          .map((segment, index) => {
+            const notes = segment[handIndex];
+            const notation = isEmpty(notes) ? "z" : `[${notes.join("")}]`;
+
+            return `${notation}8`;
+          })
+          .join("|"),
+      )
+      .join("|\n")}`;
+  }
 
   const notation = createMemo(() => {
     return `
@@ -48,14 +68,8 @@ M: 4/4
 %%staves {1 2}
 V:1 clef=treble
 V:2 clef=bass
-[V:1] ${tonicNotesIndicationNotation().rightHand}${systems()
-      .map((system) =>
-        system.map((segment, index) => `[${segment.join("")}]8`).join("|"),
-      )
-      .join("|\n")} |]
-[V:2] ${tonicNotesIndicationNotation().leftHand}${systems()
-      .map((system) => system.map(() => "z8").join("|"))
-      .join("|\n")} |]
+[V:1] ${getNotationFor(RIGHT_HAND_INDEX)} |]
+[V:2] ${getNotationFor(LEFT_HAND_INDEX)} |]
   `;
   });
 
