@@ -2,8 +2,10 @@ import { clientOnly } from "@solidjs/start";
 import { createForm } from "@tanstack/solid-form";
 import { Button, Form } from "solid-bootstrap";
 import { createSignal } from "solid-js";
+import { ButtonGroupMultiSelect } from "~/components/button-group-multi-select";
 import { ButtonGroupSelect } from "~/components/button-group-select";
 import { defaultSettings } from "~/model/default-settings";
+import { scaleDegreesOptions } from "~/model/options";
 import { pitchClasses } from "~/model/pitch-class";
 
 const ExerciseNotation = clientOnly(() => import("./exercise-notation"));
@@ -52,6 +54,18 @@ export default function ExerciseBuilder() {
         checked={showTonicIndication()}
         onChange={(e) => setShowTonicIndication(e.target.checked)}
       />
+      <Form.Group class="mb-3" controlId="formBasicEmail">
+        <Form.Label>Key</Form.Label>
+        <form.Field name="scaleDegrees">
+          {(field) => (
+            <ButtonGroupMultiSelect
+              options={scaleDegreesOptions}
+              value={field().state.value}
+              onChange={(newValue) => field().handleChange(newValue)}
+            />
+          )}
+        </form.Field>
+      </Form.Group>
       <Button disabled={!canSubmit()} onClick={() => setSeed((seed) => ++seed)}>
         Generate
       </Button>
