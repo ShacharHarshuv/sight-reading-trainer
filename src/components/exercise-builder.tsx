@@ -1,6 +1,13 @@
 import { clientOnly } from "@solidjs/start";
 import { createForm } from "@tanstack/solid-form";
-import { Button, Col, Form, Row } from "solid-bootstrap";
+import {
+  Button,
+  Col,
+  Form,
+  Row,
+  Stack,
+  ButtonGroup,
+} from "solid-bootstrap";
 import { createSignal } from "solid-js";
 import { ButtonGroupMultiSelect } from "~/components/form/button-group-multi-select";
 import { ButtonGroupSelect } from "~/components/form/button-group-select";
@@ -54,11 +61,18 @@ export default function ExerciseBuilder() {
         <Form.Label>Scale Degrees</Form.Label>
         <form.Field name="scaleDegrees">
           {(field) => (
-            <ButtonGroupMultiSelect
-              options={scaleDegreesOptions}
-              value={field().state.value}
-              onChange={(newValue) => field().handleChange(newValue)}
-            />
+            <Stack direction="horizontal" gap={2} >
+              <ButtonGroupMultiSelect
+                options={scaleDegreesOptions}
+                value={field().state.value}
+                onChange={(newValue) => field().handleChange(newValue)}
+              />
+              <ButtonGroup>
+                <Button variant="outline-secondary" onClick={() => field().handleChange(["1", "3", "5"])}>Triad</Button>
+                <Button variant="outline-secondary" onclick={() => field().handleChange(["1", "2", "3", "5", "6"])}>Pentatonic</Button>
+                <Button variant="outline-secondary" onclick={() => field().handleChange(["1", "2", "3", "4", "5", "6", "7"])}>All</Button>
+              </ButtonGroup>
+            </Stack>
           )}
         </form.Field>
       </Form.Group>
