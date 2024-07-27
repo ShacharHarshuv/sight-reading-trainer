@@ -8,12 +8,14 @@ import { NumberField } from "~/components/form/number-field";
 import { defaultSettings } from "~/model/default-settings";
 import { scaleDegreesOptions } from "~/model/options";
 import { pitchClasses } from "~/model/pitch-class";
+import { RangePicker } from '~/components/form/range-picker';
+import { NaturalRange } from '~/model/natural-range';
 
 const ExerciseNotation = clientOnly(() => import("./exercise-notation"));
 
 export default function ExerciseBuilder() {
   const form = createForm(() => ({
-    defaultValues: defaultSettings,
+    defaultValues: defaultSettings, // todo?
     onSubmit: async ({ value }) => {
       // Do something with form data
       console.log("submit", value);
@@ -24,6 +26,7 @@ export default function ExerciseBuilder() {
 
   const exerciseSettings = form.useStore((state) => state.values);
   const canSubmit = form.useStore((state) => state.canSubmit);
+  const defaultRange: NaturalRange = [...defaultSettings.range]; // for some reason defaultSettings is being overridden, though it really shouldn't
 
   return (
     <div>
@@ -86,6 +89,22 @@ export default function ExerciseBuilder() {
                   min={2}
                   offset={1}
                   onChange={(newValue) => field().handleChange(newValue)}
+                />
+              </>
+            )}
+          </form.Field>
+        </Form.Group>
+        <Form.Group as={Col}>
+          <form.Field name="range">
+            {(field) => (
+              <>
+                <Form.Label>
+                  Range
+                  <Button variant="link" onClick={() => field().handleChange(defaultRange)}>reset</Button>
+                </Form.Label>
+                <RangePicker
+                  value={field().state.value}
+                  onChange={field().handleChange}
                 />
               </>
             )}

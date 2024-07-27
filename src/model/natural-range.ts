@@ -4,7 +4,7 @@ import {
   abcPitchToNaturalPitchClassNumber,
 } from "~/model/natural-pitch-class-number";
 
-export type NaturalRange = [NaturalPitchClassNumber, NaturalPitchClassNumber];
+export type NaturalRange = readonly [NaturalPitchClassNumber, NaturalPitchClassNumber];
 
 export function naturalRange(
   min: AbcPitch | number,
