@@ -8,7 +8,6 @@ import {
   NaturalRange,
   allNaturalPitchNumbersInRange,
   isInNaturalRange,
-  mergeNaturalRanges,
 } from "~/model/natural-range";
 import { PitchClass } from "~/model/pitch-class";
 import { scaleDegreeToAbcNaturalPitchClass } from "~/model/scale-degree-to-abc-natural-pitch-class";
@@ -35,17 +34,14 @@ export function scaleDegreeVoicingToAbcPitchesOptions(
 
   return pitchClassVoicingToAbcPitchesOptions(voicingAbcPitchClasses, {
     ...options,
-    sopranoRange: mergeNaturalRanges(options.sopranoRange, [
-      // todo: we want to do something smarter than that, because we want to allow the suprano to be beyong the clef range if any other note in the voicing is not beyond that range
-      options.lHandRange[0],
-      options.rHandRange[1],
-    ]),
+    originalSopranoRange: options.sopranoRange,
   });
 }
 
 function pitchClassVoicingToAbcPitchesOptions(
   voicing: PitchClassVoicing,
   options: {
+    originalSopranoRange: NaturalRange; // todo: do we need this?
     sopranoRange: NaturalRange;
     rHandRange: NaturalRange;
     lHandRange: NaturalRange;
@@ -78,10 +74,11 @@ function pitchClassVoicingToAbcPitchesOptions(
             lHand: voicing.lHand,
           },
           {
-            sopranoRange: mergeNaturalRanges(options.sopranoRange, [
-              -Infinity,
-              abcPitchToNaturalPitchNumber(sopranoOption),
-            ]),
+            originalSopranoRange: options.originalSopranoRange,
+            sopranoRange: [
+              abcPitchToNaturalPitchNumber(sopranoOption) - 12,
+              abcPitchToNaturalPitchNumber(sopranoOption) - 1,
+            ],
             rHandRange: options.rHandRange,
             lHandRange: options.lHandRange,
           },
@@ -107,6 +104,7 @@ function pitchClassVoicingToAbcPitchesOptions(
 
     return allOptions;
   } else {
+    // TODO: we need to eliminate this duplication somehow
     const [sopranoPitchClass, ...lHandRest] = voicing.lHand;
     const sopranoOptions = allNaturalPitchNumbersInRange(options.sopranoRange)
       .map(naturalPitchNumberToAbcPitch)
@@ -123,10 +121,11 @@ function pitchClassVoicingToAbcPitchesOptions(
             lHand: lHandRest,
           },
           {
-            sopranoRange: mergeNaturalRanges(options.sopranoRange, [
-              -Infinity,
-              abcPitchToNaturalPitchNumber(sopranoOption),
-            ]),
+            originalSopranoRange: options.originalSopranoRange,
+            sopranoRange: [
+              abcPitchToNaturalPitchNumber(sopranoOption) - 12,
+              abcPitchToNaturalPitchNumber(sopranoOption) - 1,
+            ],
             rHandRange: options.rHandRange,
             lHandRange: options.lHandRange,
           },
@@ -155,11 +154,4 @@ function pitchClassVoicingToAbcPitchesOptions(
 
     return allOptions;
   }
-
-  // return allNaturalPitchClassNumbersInRange(range)
-  //   .map(naturalPitchNumberToAbcPitch)
-  //   .filter((abcPitch) => {
-  //     const { naturalPitchClass, octave } = parseAbcPitch(abcPitch);
-  //     return naturalPitchClass === targetNaturalPitchClass;
-  //   });
 }

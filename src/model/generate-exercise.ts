@@ -2,10 +2,11 @@ import { first, isEmpty, isEqual } from "lodash";
 import { AbcPitch } from "~/model/abc-pitch";
 import { abcPitchToNaturalPitchNumber } from "~/model/natural-pitch-number";
 import {
-  mergeNaturalRanges,
+  intersectNaturalRanges,
   NaturalRange,
   naturalRange,
   naturalRangeFrom,
+  unionNaturalRanges,
 } from "~/model/natural-range";
 import { PitchClass } from "~/model/pitch-class";
 import { randomElement } from "~/model/random-element";
@@ -58,7 +59,7 @@ export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
 
   return new Array(config.numberOfSegments)
     .fill(null)
-    .map((): ExerciseSegment => {
+    .map((_, i): ExerciseSegment => {
       const lastSoprano =
         lastAbcVoicing &&
         (first(lastAbcVoicing.rHand) || first(lastAbcVoicing.lHand)!);
@@ -80,21 +81,24 @@ export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
           lowestNumber - wiggleRoom,
         );
       })();
-      const sopranoRange = mergeNaturalRanges(
-        ...[maxIntervalLimit, overallLimit].filter(isDefined),
-      );
+      const sopranoRange =
+        i === 0
+          ? unionNaturalRanges(config.lhRange, config.rhRange)
+          : intersectNaturalRanges(
+              ...[maxIntervalLimit, overallLimit].filter(isDefined),
+            );
 
       const voicings = getScaleDegreeVoicings(config);
 
       const options = voicings
-        .flatMap((scaleDegreeVoicing) =>
-          scaleDegreeVoicingToAbcPitchesOptions(scaleDegreeVoicing, {
+        .flatMap((scaleDegreeVoicing) => {
+          return scaleDegreeVoicingToAbcPitchesOptions(scaleDegreeVoicing, {
             key: config.tonic,
             sopranoRange,
             rHandRange: config.rhRange,
             lHandRange: config.lhRange,
-          }),
-        )
+          });
+        })
         .filter((option) => !isEqual(option, lastAbcVoicing));
 
       if (isEmpty(options)) {

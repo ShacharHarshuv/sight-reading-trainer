@@ -23,10 +23,19 @@ export function naturalRange(
   return [minNumber, maxNumber];
 }
 
-export function mergeNaturalRanges(...ranges: NaturalRange[]): NaturalRange {
+export function intersectNaturalRanges(
+  ...ranges: NaturalRange[]
+): NaturalRange {
   return [
     Math.max(...ranges.map((range) => range[0])),
     Math.min(...ranges.map((range) => range[1])),
+  ];
+}
+
+export function unionNaturalRanges(...ranges: NaturalRange[]): NaturalRange {
+  return [
+    Math.min(...ranges.map((range) => range[0])),
+    Math.max(...ranges.map((range) => range[1])),
   ];
 }
 
