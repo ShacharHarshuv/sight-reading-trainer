@@ -1,9 +1,3 @@
-import { parseAbcPitch } from "~/model/abc-pitch";
-import { naturalPitchClassNumberToAbcPitch } from "~/model/natural-pitch-class-number";
-import {
-  NaturalRange,
-  allNaturalPitchClassNumbersInRange,
-} from "~/model/natural-range";
 import {
   PitchClass,
   naturalPitchClasses,
@@ -11,11 +5,10 @@ import {
 } from "~/model/pitch-class";
 import { ScaleDegree, parseScaleDegree } from "~/model/scale-degree";
 
-export function scaleDegreeToAbcPitches(
+export function scaleDegreeToAbcNaturalPitchClass(
   scaleDegree: ScaleDegree,
   key: PitchClass,
-  range: NaturalRange,
-) {
+): PitchClass {
   const scaleDegreeParse = parseScaleDegree(scaleDegree);
 
   if (scaleDegreeParse.accidental) {
@@ -33,12 +26,5 @@ export function scaleDegreeToAbcPitches(
   const targetNaturalPitchClassIndex =
     (keyNaturalPitchClassIndex + scaleDegreeNaturalPitchClassIndexDifference) %
     alphabetSize;
-  const targetNaturalPitchClass =
-    naturalPitchClasses[targetNaturalPitchClassIndex];
-  return allNaturalPitchClassNumbersInRange(range)
-    .map(naturalPitchClassNumberToAbcPitch)
-    .filter((abcPitch) => {
-      const { naturalPitchClass, octave } = parseAbcPitch(abcPitch);
-      return naturalPitchClass === targetNaturalPitchClass;
-    });
+  return naturalPitchClasses[targetNaturalPitchClassIndex];
 }

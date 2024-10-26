@@ -1,6 +1,6 @@
-import { isEmpty } from "lodash";
+import { first, isEmpty, isEqual } from "lodash";
 import { AbcPitch } from "~/model/abc-pitch";
-import { abcPitchToNaturalPitchClassNumber } from "~/model/natural-pitch-class-number";
+import { abcPitchToNaturalPitchNumber } from "~/model/natural-pitch-number";
 import {
   mergeNaturalRanges,
   NaturalRange,
@@ -11,14 +11,16 @@ import { PitchClass } from "~/model/pitch-class";
 import { randomElement } from "~/model/random-element";
 import { RomanNumeralChord } from "~/model/roman-numeral-chord";
 import { ScaleDegree } from "~/model/scale-degree";
-import { scaleDegreeToAbcPitches } from "~/model/scale-degree-to-abc";
+import { AbcPitchVoicing, ScaleDegreeVoicing } from "~/model/voicing";
+import { scaleDegreeVoicingToAbcPitchesOptions } from "~/model/voicing-to-abc-pitches-options";
 import { isDefined } from "~/ts-utils/is-defined";
 
 export interface ExerciseSettings {
   numberOfSegments: number;
   scaleDegrees: readonly ScaleDegree[];
+  hand: "left" | "right"; // relevant only for "Scale Degrees"
   chords: readonly RomanNumeralChord[];
-  hand: "left" | "right";
+
   tonic: PitchClass;
   rhRange: NaturalRange;
   lhRange: NaturalRange;
@@ -31,24 +33,46 @@ export const LEFT_HAND_INDEX = 1;
 
 type ExerciseSegment = [AbcPitch[], AbcPitch[]];
 
+function getScaleDegreeVoicings(
+  config: ExerciseSettings,
+): ScaleDegreeVoicing[] {
+  return config.scaleDegrees.map((scaleDegree) => {
+    if (config.hand === "right") {
+      return {
+        rHand: [scaleDegree],
+        lHand: [],
+      };
+    } else {
+      return {
+        rHand: [],
+        lHand: [scaleDegree],
+      };
+    }
+  });
+}
+
 export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
-  let lastOption: AbcPitch | null = null;
-  let highestOption: AbcPitch | null = null;
-  let lowestOption: AbcPitch | null = null;
+  let lastAbcVoicing: AbcPitchVoicing | null = null;
+  let highestSoprano: AbcPitch | null = null;
+  let lowestSoprano: AbcPitch | null = null;
+
   return new Array(config.numberOfSegments)
     .fill(null)
     .map((): ExerciseSegment => {
-      const consumerLimit =
-        config.hand === "right" ? config.rhRange : config.lhRange;
+      const lastSoprano =
+        lastAbcVoicing &&
+        (first(lastAbcVoicing.rHand) || first(lastAbcVoicing.lHand)!);
+
       const maxIntervalLimit =
-        lastOption && naturalRangeFrom(lastOption, config.maxInterval);
+        lastSoprano && naturalRangeFrom(lastSoprano, config.maxInterval);
+
       const overallLimit = ((): NaturalRange | null => {
-        if (!highestOption || !lowestOption) {
+        if (!highestSoprano || !lowestSoprano) {
           return null;
         }
 
-        const highestNumber = abcPitchToNaturalPitchClassNumber(highestOption);
-        const lowestNumber = abcPitchToNaturalPitchClassNumber(lowestOption);
+        const highestNumber = abcPitchToNaturalPitchNumber(highestSoprano);
+        const lowestNumber = abcPitchToNaturalPitchNumber(lowestSoprano);
         const wiggleRoom =
           config.maxOverallRange - (highestNumber - lowestNumber);
         return naturalRange(
@@ -56,50 +80,55 @@ export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
           lowestNumber - wiggleRoom,
         );
       })();
-      const range = mergeNaturalRanges(
-        ...[consumerLimit, maxIntervalLimit, overallLimit].filter(isDefined),
+      const sopranoRange = mergeNaturalRanges(
+        ...[maxIntervalLimit, overallLimit].filter(isDefined),
       );
-      const options = config.scaleDegrees
-        .flatMap((scaleDegree) =>
-          scaleDegreeToAbcPitches(scaleDegree, config.tonic, range),
+
+      const voicings = getScaleDegreeVoicings(config);
+
+      const options = voicings
+        .flatMap((scaleDegreeVoicing) =>
+          scaleDegreeVoicingToAbcPitchesOptions(scaleDegreeVoicing, {
+            key: config.tonic,
+            sopranoRange,
+            rHandRange: config.rhRange,
+            lHandRange: config.lhRange,
+          }),
         )
-        .filter((option) => option !== lastOption);
+        .filter((option) => !isEqual(option, lastAbcVoicing));
 
       if (isEmpty(options)) {
         console.error("No options available", {
-          consumerLimit,
           maxIntervalLimit,
           overallLimit,
-          range,
-          lastOption,
-          highestOption,
-          lowestOption,
+          lastAbcVoicing,
+          highestOption: highestSoprano,
+          lowestOption: lowestSoprano,
         });
         return [[], []];
       }
 
       const selectedOption = randomElement(options);
-      lastOption = selectedOption;
+      lastAbcVoicing = selectedOption;
+
+      const currentSoprano =
+        first(selectedOption.rHand) || first(selectedOption.lHand)!;
 
       if (
-        !highestOption ||
-        abcPitchToNaturalPitchClassNumber(selectedOption) >
-          abcPitchToNaturalPitchClassNumber(highestOption)
+        !highestSoprano ||
+        abcPitchToNaturalPitchNumber(currentSoprano) >
+          abcPitchToNaturalPitchNumber(highestSoprano)
       ) {
-        highestOption = selectedOption;
+        highestSoprano = currentSoprano;
       }
       if (
-        !lowestOption ||
-        abcPitchToNaturalPitchClassNumber(selectedOption) <
-          abcPitchToNaturalPitchClassNumber(lowestOption)
+        !lowestSoprano ||
+        abcPitchToNaturalPitchNumber(currentSoprano) <
+          abcPitchToNaturalPitchNumber(lowestSoprano)
       ) {
-        lowestOption = selectedOption;
+        lowestSoprano = currentSoprano;
       }
 
-      if (config.hand === "right") {
-        return [[selectedOption], []];
-      } else {
-        return [[], [selectedOption]];
-      }
+      return [selectedOption.rHand, selectedOption.lHand];
     });
 }

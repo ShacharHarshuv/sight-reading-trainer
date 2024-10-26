@@ -2,7 +2,7 @@ import { Button, ButtonGroup, Stack } from "solid-bootstrap";
 import { FaSolidChevronDown, FaSolidChevronUp } from "solid-icons/fa";
 import { createMemo } from "solid-js";
 import Notation from "~/components/notation";
-import { naturalPitchClassNumberToAbcPitch } from "~/model/natural-pitch-class-number";
+import { naturalPitchNumberToAbcPitch } from "~/model/natural-pitch-number";
 import { NaturalRange } from "~/model/natural-range";
 
 export function RangePicker(props: {
@@ -10,9 +10,7 @@ export function RangePicker(props: {
   value: NaturalRange;
   onChange: (value: NaturalRange) => void;
 }) {
-  const notes = createMemo(() =>
-    props.value.map(naturalPitchClassNumberToAbcPitch),
-  );
+  const notes = createMemo(() => props.value.map(naturalPitchNumberToAbcPitch));
   const clef = createMemo(() => props.clef ?? "treble");
   const notation = createMemo(() => {
     return `V: 1 clef=${clef()}\n` + `[${notes().join("")}]8`;

@@ -1,12 +1,12 @@
 import { AbcPitch, parseAbcPitch } from "~/model/abc-pitch";
 import { naturalPitchClasses } from "~/model/pitch-class";
 
-export type NaturalPitchClassNumber = number;
+export type NaturalPitchNumber = number;
 
 const positiveModulo = (a: number, b: number) => ((a % b) + b) % b;
 
-export function naturalPitchClassNumberToAbcPitch(
-  pitchClassNumber: NaturalPitchClassNumber,
+export function naturalPitchNumberToAbcPitch(
+  pitchClassNumber: NaturalPitchNumber,
 ): AbcPitch {
   let octave = Math.floor(pitchClassNumber / 7);
   let note = naturalPitchClasses[positiveModulo(pitchClassNumber, 7)];
@@ -21,9 +21,9 @@ export function naturalPitchClassNumberToAbcPitch(
   return note;
 }
 
-export function abcPitchToNaturalPitchClassNumber(
+export function abcPitchToNaturalPitchNumber(
   abcPitch: AbcPitch,
-): NaturalPitchClassNumber {
+): NaturalPitchNumber {
   const { naturalPitchClass, octave } = parseAbcPitch(abcPitch);
 
   const pitchClassIndex = naturalPitchClasses.indexOf(naturalPitchClass);

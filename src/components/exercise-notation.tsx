@@ -8,7 +8,7 @@ import {
   RIGHT_HAND_INDEX,
 } from "~/model/generate-exercise";
 import { NaturalRange } from "~/model/natural-range";
-import { scaleDegreeToAbcPitches } from "~/model/scale-degree-to-abc";
+import { scaleDegreesToAbcPitchesOptions } from "~/model/scale-degrees-to-abc-pitches-options";
 
 export default function ExerciseNotation(props: {
   exerciseSettings: ExerciseSettings;
@@ -29,7 +29,7 @@ export default function ExerciseNotation(props: {
         return "";
       }
 
-      const tonicNotes = scaleDegreeToAbcPitches(
+      const tonicNotes = scaleDegreesToAbcPitchesOptions(
         "1",
         props.exerciseSettings.tonic,
         range,
