@@ -7,6 +7,7 @@ import {
 import {
   NaturalRange,
   allNaturalPitchNumbersInRange,
+  intersectNaturalRanges,
   isInNaturalRange,
 } from "~/model/natural-range";
 import { PitchClass } from "~/model/pitch-class";
@@ -34,14 +35,12 @@ export function scaleDegreeVoicingToAbcPitchesOptions(
 
   return pitchClassVoicingToAbcPitchesOptions(voicingAbcPitchClasses, {
     ...options,
-    originalSopranoRange: options.sopranoRange,
   });
 }
 
 function pitchClassVoicingToAbcPitchesOptions(
   voicing: PitchClassVoicing,
   options: {
-    originalSopranoRange: NaturalRange; // todo: do we need this?
     sopranoRange: NaturalRange;
     rHandRange: NaturalRange;
     lHandRange: NaturalRange;
@@ -74,11 +73,15 @@ function pitchClassVoicingToAbcPitchesOptions(
             lHand: voicing.lHand,
           },
           {
-            originalSopranoRange: options.originalSopranoRange,
-            sopranoRange: [
-              abcPitchToNaturalPitchNumber(sopranoOption) - 12,
-              abcPitchToNaturalPitchNumber(sopranoOption) - 1,
-            ],
+            sopranoRange: rHandRest.length
+              ? [
+                  abcPitchToNaturalPitchNumber(sopranoOption) - 12,
+                  abcPitchToNaturalPitchNumber(sopranoOption) - 1,
+                ]
+              : intersectNaturalRanges(options.lHandRange, [
+                  -Infinity,
+                  abcPitchToNaturalPitchNumber(sopranoOption) - 1,
+                ]),
             rHandRange: options.rHandRange,
             lHandRange: options.lHandRange,
           },
@@ -96,7 +99,10 @@ function pitchClassVoicingToAbcPitchesOptions(
           return (
             !voicingOption[hand].length ||
             voicingOption[hand].some((abcPitch) =>
-              isInNaturalRange(options.rHandRange, abcPitch),
+              isInNaturalRange(
+                options[(hand + "Range") as "rHandRange" | "lHandRange"],
+                abcPitch,
+              ),
             )
           );
         });
@@ -121,7 +127,6 @@ function pitchClassVoicingToAbcPitchesOptions(
             lHand: lHandRest,
           },
           {
-            originalSopranoRange: options.originalSopranoRange,
             sopranoRange: [
               abcPitchToNaturalPitchNumber(sopranoOption) - 12,
               abcPitchToNaturalPitchNumber(sopranoOption) - 1,
