@@ -6,6 +6,7 @@ export const defaultSettings: ExerciseSettings = {
   numberOfSegments: 8 * 4,
   scaleDegrees: diatonicScaleDegrees,
   hand: "right",
+  chords: [],
   tonic: "C",
   rhRange: naturalRange("A,", "C''"),
   lhRange: naturalRange("C,,", "E"),

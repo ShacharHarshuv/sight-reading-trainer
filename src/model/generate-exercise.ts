@@ -9,6 +9,7 @@ import {
 } from "~/model/natural-range";
 import { PitchClass } from "~/model/pitch-class";
 import { randomElement } from "~/model/random-element";
+import { RomanNumeralChord } from "~/model/roman-numeral-chord";
 import { ScaleDegree } from "~/model/scale-degree";
 import { scaleDegreeToAbcPitches } from "~/model/scale-degree-to-abc";
 import { isDefined } from "~/ts-utils/is-defined";
@@ -16,6 +17,7 @@ import { isDefined } from "~/ts-utils/is-defined";
 export interface ExerciseSettings {
   numberOfSegments: number;
   scaleDegrees: readonly ScaleDegree[];
+  chords: readonly RomanNumeralChord[];
   hand: "left" | "right";
   tonic: PitchClass;
   rhRange: NaturalRange;
