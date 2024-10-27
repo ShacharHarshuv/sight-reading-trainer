@@ -10,7 +10,7 @@ export default function Notation(props: {
   const warnings = createMemo(() => tuneObject()?.warnings);
 
   createEffect(() => {
-    console.log(warnings());
+    if (warnings()) console.log(warnings());
   });
 
   createEffect(() => {

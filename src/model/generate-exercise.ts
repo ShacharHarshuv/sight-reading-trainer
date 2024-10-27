@@ -55,8 +55,6 @@ function getScaleDegreeVoicings(
     }
   });
 
-  console.log("chords", config.chords); // todo
-
   const chords = config.chords.flatMap((chord) => chordVoicings(chord, config));
 
   return [...individualNotes, ...chords];
@@ -99,8 +97,6 @@ export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
             );
 
       const voicings = getScaleDegreeVoicings(config);
-
-      console.log("voicings", voicings); // todo
 
       if (isEmpty(voicings)) {
         console.log("Nothing is selected");

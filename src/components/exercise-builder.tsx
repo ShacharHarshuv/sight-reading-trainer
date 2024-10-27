@@ -1,13 +1,14 @@
 import { clientOnly } from "@solidjs/start";
 import { createForm } from "@tanstack/solid-form";
 import { Button, ButtonGroup, Col, Form, Row, Stack } from "solid-bootstrap";
-import { Show, createSignal } from "solid-js";
+import { Show, createEffect, createSignal, onMount } from "solid-js";
 import { ButtonGroupMultiSelect } from "~/components/form/button-group-multi-select";
 import { ButtonGroupSelect } from "~/components/form/button-group-select";
 import { NumberField } from "~/components/form/number-field";
 import { RangePicker } from "~/components/form/range-picker";
 import { defaultSettings } from "~/model/default-settings";
 import { formatChord } from "~/model/format-chord";
+import { ExerciseSettings } from "~/model/generate-exercise";
 import { NaturalRange } from "~/model/natural-range";
 import { chordsOptions, scaleDegreesOptions } from "~/model/options";
 import { pitchClasses } from "~/model/pitch-class";
@@ -15,13 +16,12 @@ import { pitchClasses } from "~/model/pitch-class";
 const ExerciseNotation = clientOnly(() => import("./exercise-notation"));
 
 export default function ExerciseBuilder() {
-  const form = createForm(() => ({
-    defaultValues: defaultSettings, // todo?
-    onSubmit: async ({ value }) => {
-      // Do something with form data
-      console.log("submit", value);
-    },
-  }));
+  const form = createForm(() => {
+    return {
+      defaultValues: defaultSettings,
+      onSubmit: async ({ value }) => {},
+    };
+  });
   const [seed, setSeed] = createSignal(1);
   const [showTonicIndication, setShowTonicIndication] = createSignal(false);
 
@@ -30,6 +30,31 @@ export default function ExerciseBuilder() {
   const defaultRhRange: NaturalRange = [...defaultSettings.rhRange]; // for some reason defaultSettings is being overridden, though it really shouldn't
   const defaultLhRange: NaturalRange = [...defaultSettings.lhRange]; // for some reason defaultSettings is being overridden, though it really shouldn't
   const selectedHand = form.useStore((state) => state.values.hand);
+
+  onMount(() => {
+    console.log("onMount");
+    const savedSettingsValue = localStorage.getItem("exerciseSettings");
+
+    if (!savedSettingsValue) {
+      return;
+    }
+
+    const savedSettings = JSON.parse(savedSettingsValue) as ExerciseSettings;
+    console.log("savedSettings", savedSettings);
+
+    form.update({
+      defaultValues: savedSettings,
+    });
+    form.handleSubmit();
+  });
+
+  createEffect(() => {
+    console.log("effect");
+    localStorage.setItem(
+      "exerciseSettings",
+      JSON.stringify(exerciseSettings()),
+    );
+  });
 
   return (
     <div>
