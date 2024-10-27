@@ -1,4 +1,5 @@
-import { last } from "lodash";
+import { first, last } from "lodash";
+import { ExerciseSettings } from "~/model/generate-exercise";
 import {
   ChordType,
   RomanNumeral,
@@ -9,10 +10,11 @@ import { ScaleDegreeVoicing } from "~/model/voicing";
 
 function addInterval(scaleDegree: ScaleDegree, interval: number) {
   const scaleDegreeNumber = +scaleDegree;
-  return (
-    ((scaleDegreeNumber - 1 + interval) % 7) +
-    1
-  ).toString() as ScaleDegree;
+  let number = ((scaleDegreeNumber - 1 + interval) % 7) + 1;
+  if (number < 0) {
+    number += 7;
+  }
+  return number.toString() as ScaleDegree;
 }
 
 function buildThirds(root: ScaleDegree, numberOfNotes: number) {
@@ -41,7 +43,13 @@ const romanNumeralToScaleDegree: Partial<Record<RomanNumeral, ScaleDegree>> = {
   viio: "7",
 };
 
-export function chordVoicings(chord: RomanNumeralChord) {
+export function chordVoicings(
+  chord: RomanNumeralChord,
+  settings: Pick<
+    ExerciseSettings,
+    "voicing" | "rightHandOctaveDoubling" | "leftHandOctaveDoubling"
+  >,
+) {
   const match = chord.match(/^(.*?)(6|64)?$/);
 
   if (!match) {
@@ -49,10 +57,8 @@ export function chordVoicings(chord: RomanNumeralChord) {
   }
 
   const [, base, chordType] = match;
-  console.log("chordType", chordType); // todo
 
   const bassIndex = bassIndexFromInversion[(chordType ?? "") as ChordType];
-  console.log("bassIndex", bassIndex);
   const root = romanNumeralToScaleDegree[base as RomanNumeral];
 
   if (!root) {
@@ -83,7 +89,40 @@ export function chordVoicings(chord: RomanNumeralChord) {
     };
   });
 
-  console.log("openVoicings", openVoicings); // todo
+  const allVoicings = [];
 
-  return [...closeVoicings, ...openVoicings];
+  if (settings.voicing.includes("close")) {
+    allVoicings.push(...closeVoicings);
+  }
+  if (settings.voicing.includes("open")) {
+    allVoicings.push(...openVoicings);
+  }
+
+  if (settings.leftHandOctaveDoubling.includes("yes")) {
+    const withLeftHandDoubling = allVoicings.map((voicing) => ({
+      ...voicing,
+      lHand: [...voicing.lHand, addInterval(first(voicing.lHand)!, 7)],
+    }));
+
+    if (!settings.leftHandOctaveDoubling.includes("no")) {
+      allVoicings.length = 0;
+    }
+
+    allVoicings.push(...withLeftHandDoubling);
+  }
+
+  if (settings.rightHandOctaveDoubling.includes("yes")) {
+    const withRightHandDoubling = allVoicings.map((voicing) => ({
+      ...voicing,
+      rHand: [addInterval(last(voicing.rHand)!, -7), ...voicing.rHand],
+    }));
+
+    if (!settings.rightHandOctaveDoubling.includes("no")) {
+      allVoicings.length = 0;
+    }
+
+    allVoicings.push(...withRightHandDoubling);
+  }
+
+  return allVoicings;
 }

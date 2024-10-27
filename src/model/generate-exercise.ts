@@ -22,7 +22,9 @@ export interface ExerciseSettings {
   scaleDegrees: readonly ScaleDegree[];
   hand: "left" | "right"; // relevant only for "Scale Degrees"
   chords: readonly RomanNumeralChord[];
-
+  voicing: readonly ("open" | "close")[];
+  leftHandOctaveDoubling: readonly ("no" | "yes")[];
+  rightHandOctaveDoubling: readonly ("no" | "yes")[];
   tonic: PitchClass;
   rhRange: NaturalRange;
   lhRange: NaturalRange;
@@ -54,7 +56,7 @@ function getScaleDegreeVoicings(
 
   console.log("chords", config.chords); // todo
 
-  const chords = config.chords.flatMap(chordVoicings);
+  const chords = config.chords.flatMap((chord) => chordVoicings(chord, config));
 
   return [...individualNotes, ...chords];
 }
