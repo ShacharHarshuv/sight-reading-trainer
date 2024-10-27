@@ -5,6 +5,7 @@ import {
   RomanNumeralChord,
 } from "~/model/roman-numeral-chord";
 import { ScaleDegree } from "~/model/scale-degree";
+import { ScaleDegreeVoicing } from "~/model/voicing";
 
 function addInterval(scaleDegree: ScaleDegree, interval: number) {
   const scaleDegreeNumber = +scaleDegree;
@@ -61,11 +62,28 @@ export function chordVoicings(chord: RomanNumeralChord) {
   const pitches = buildThirds(root, 3);
   const bass = pitches[bassIndex];
 
-  // todo: we need to support more types of voicings (other close positions, open positions, etc.)
-  return [
-    {
-      rHand: pitches.reverse(), // we expect the voicing to be top to bottom
+  const closeVoicings: ScaleDegreeVoicing[] = [];
+
+  for (let i = 0; i < pitches.length; i++) {
+    closeVoicings.push({
+      rHand: [...pitches],
       lHand: [bass],
-    },
-  ];
+    });
+
+    const firstPitch = pitches.shift()!;
+    pitches.push(firstPitch);
+  }
+
+  const openVoicings = closeVoicings.map((closeVoicings) => {
+    const rhNotes = [...closeVoicings.rHand];
+    const middleNote = rhNotes.splice(1, 1)[0];
+    return {
+      rHand: rhNotes,
+      lHand: [...closeVoicings.lHand, middleNote],
+    };
+  });
+
+  console.log("openVoicings", openVoicings); // todo
+
+  return [...closeVoicings, ...openVoicings];
 }

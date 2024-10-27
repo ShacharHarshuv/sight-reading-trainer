@@ -28,9 +28,11 @@ export function scaleDegreeVoicingToAbcPitchesOptions(
   },
 ): AbcPitchVoicing[] {
   const voicingAbcPitchClasses = mapValues(voicing, (scaleDegrees) =>
-    scaleDegrees.map((scaleDegree) =>
-      scaleDegreeToAbcNaturalPitchClass(scaleDegree, options.key),
-    ),
+    scaleDegrees
+      .map((scaleDegree) =>
+        scaleDegreeToAbcNaturalPitchClass(scaleDegree, options.key),
+      )
+      .reverse(),
   );
 
   return pitchClassVoicingToAbcPitchesOptions(voicingAbcPitchClasses, {
@@ -128,7 +130,7 @@ function pitchClassVoicingToAbcPitchesOptions(
           },
           {
             sopranoRange: [
-              abcPitchToNaturalPitchNumber(sopranoOption) - 12,
+              abcPitchToNaturalPitchNumber(sopranoOption) - 7,
               abcPitchToNaturalPitchNumber(sopranoOption) - 1,
             ],
             rHandRange: options.rHandRange,
