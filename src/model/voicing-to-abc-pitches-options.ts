@@ -7,7 +7,6 @@ import {
 import {
   NaturalRange,
   allNaturalPitchNumbersInRange,
-  intersectNaturalRanges,
   isInNaturalRange,
 } from "~/model/natural-range";
 import { PitchClass } from "~/model/pitch-class";
@@ -27,16 +26,30 @@ export function scaleDegreeVoicingToAbcPitchesOptions(
     lHandRange: NaturalRange;
   },
 ): AbcPitchVoicing[] {
-  const voicingAbcPitchClasses = mapValues(voicing, (scaleDegrees) =>
-    scaleDegrees
-      .map((scaleDegree) =>
-        scaleDegreeToAbcNaturalPitchClass(scaleDegree, options.key),
-      )
-      .reverse(),
+  const voicingAbcPitchClasses = mapValues(
+    voicing,
+    (scaleDegrees) =>
+      scaleDegrees
+        .map((scaleDegree) =>
+          scaleDegreeToAbcNaturalPitchClass(scaleDegree, options.key),
+        )
+        .reverse(), // the degrees are written from bottom to top, but we voice them from top to bottom
   );
 
   return pitchClassVoicingToAbcPitchesOptions(voicingAbcPitchClasses, {
     ...options,
+  }).filter((voicingOption) => {
+    return ["rHand" as const, "lHand" as const].every((hand) => {
+      return (
+        !voicingOption[hand].length ||
+        voicingOption[hand].some((abcPitch) =>
+          isInNaturalRange(
+            options[(hand + "Range") as "rHandRange" | "lHandRange"],
+            abcPitch,
+          ),
+        )
+      );
+    });
   });
 }
 
@@ -67,8 +80,8 @@ function pitchClassVoicingToAbcPitchesOptions(
         return naturalPitchClass === sopranoPitchClass;
       });
 
-    const allOptions: AbcPitchVoicing[] = sopranoOptions
-      .flatMap((sopranoOption): AbcPitchVoicing[] => {
+    const allOptions: AbcPitchVoicing[] = sopranoOptions.flatMap(
+      (sopranoOption): AbcPitchVoicing[] => {
         const restOptions = pitchClassVoicingToAbcPitchesOptions(
           {
             rHand: rHandRest,
@@ -80,10 +93,10 @@ function pitchClassVoicingToAbcPitchesOptions(
                   abcPitchToNaturalPitchNumber(sopranoOption) - 7,
                   abcPitchToNaturalPitchNumber(sopranoOption) - 1,
                 ]
-              : intersectNaturalRanges(options.lHandRange, [
-                  -Infinity,
+              : [
+                  options.lHandRange[0],
                   abcPitchToNaturalPitchNumber(sopranoOption) - 1,
-                ]),
+                ],
             rHandRange: options.rHandRange,
             lHandRange: options.lHandRange,
           },
@@ -95,20 +108,8 @@ function pitchClassVoicingToAbcPitchesOptions(
             lHand: restOption.lHand,
           }),
         );
-      })
-      .filter((voicingOption) => {
-        return ["rHand" as const, "lHand" as const].every((hand) => {
-          return (
-            !voicingOption[hand].length ||
-            voicingOption[hand].some((abcPitch) =>
-              isInNaturalRange(
-                options[(hand + "Range") as "rHandRange" | "lHandRange"],
-                abcPitch,
-              ),
-            )
-          );
-        });
-      });
+      },
+    );
 
     return allOptions;
   } else {
