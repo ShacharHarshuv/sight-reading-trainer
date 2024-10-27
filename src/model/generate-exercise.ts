@@ -1,5 +1,6 @@
 import { first, isEmpty, isEqual } from "lodash";
 import { AbcPitch } from "~/model/abc-pitch";
+import { chordVoicings } from "~/model/chord-voicing";
 import { abcPitchToNaturalPitchNumber } from "~/model/natural-pitch-number";
 import {
   intersectNaturalRanges,
@@ -37,7 +38,7 @@ type ExerciseSegment = [AbcPitch[], AbcPitch[]];
 function getScaleDegreeVoicings(
   config: ExerciseSettings,
 ): ScaleDegreeVoicing[] {
-  return config.scaleDegrees.map((scaleDegree) => {
+  const individualNotes = config.scaleDegrees.map((scaleDegree) => {
     if (config.hand === "right") {
       return {
         rHand: [scaleDegree],
@@ -50,6 +51,12 @@ function getScaleDegreeVoicings(
       };
     }
   });
+
+  console.log("chords", config.chords); // todo
+
+  const chords = config.chords.flatMap(chordVoicings);
+
+  return [...individualNotes, ...chords];
 }
 
 export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
@@ -89,6 +96,13 @@ export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
             );
 
       const voicings = getScaleDegreeVoicings(config);
+
+      console.log("voicings", voicings); // todo
+
+      if (isEmpty(voicings)) {
+        console.log("Nothing is selected");
+        return [[], []];
+      }
 
       const options = voicings
         .flatMap((scaleDegreeVoicing) => {

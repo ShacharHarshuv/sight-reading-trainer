@@ -75,7 +75,7 @@ function pitchClassVoicingToAbcPitchesOptions(
           {
             sopranoRange: rHandRest.length
               ? [
-                  abcPitchToNaturalPitchNumber(sopranoOption) - 12,
+                  abcPitchToNaturalPitchNumber(sopranoOption) - 7,
                   abcPitchToNaturalPitchNumber(sopranoOption) - 1,
                 ]
               : intersectNaturalRanges(options.lHandRange, [

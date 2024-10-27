@@ -67,6 +67,12 @@ export default function ExerciseBuilder() {
                 <ButtonGroup>
                   <Button
                     variant="outline-secondary"
+                    onClick={() => field().handleChange([])}
+                  >
+                    None
+                  </Button>
+                  <Button
+                    variant="outline-secondary"
                     onClick={() => field().handleChange(["1", "3", "5"])}
                   >
                     Triad

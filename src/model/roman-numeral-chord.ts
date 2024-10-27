@@ -1,17 +1,17 @@
-type MajorRomanNumeral = "I" | "II" | "III" | "IV" | "V" | "VI" | "VII";
+export type MajorRomanNumeral = "I" | "II" | "III" | "IV" | "V" | "VI" | "VII";
 
-type MinorRomanNumeral = "i" | "ii" | "iii" | "iv" | "v" | "vi" | "vii";
+export type MinorRomanNumeral = "i" | "ii" | "iii" | "iv" | "v" | "vi" | "vii";
 
 type DiminishedRomanNumeral = `${MinorRomanNumeral}${"o"}`;
 
 type AugmentedRomanNumeral = `${MajorRomanNumeral}${"+"}`;
 
-type RomanNumeral =
+export type RomanNumeral =
   `${"#" | "b" | ""}${MajorRomanNumeral | MinorRomanNumeral | DiminishedRomanNumeral | AugmentedRomanNumeral}`;
 
-type ChordTypes = "" | "6" | "64";
+export type ChordType = "" | "6" | "64";
 
-export type RomanNumeralChord = `${RomanNumeral}${ChordTypes}`;
+export type RomanNumeralChord = `${RomanNumeral}${ChordType}`;
 
 export const diatonicTriads: RomanNumeralChord[] = [
   "I",
