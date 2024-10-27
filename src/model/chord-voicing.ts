@@ -99,10 +99,16 @@ export function chordVoicings(
   }
 
   if (settings.leftHandOctaveDoubling.includes("yes")) {
-    const withLeftHandDoubling = allVoicings.map((voicing) => ({
-      ...voicing,
-      lHand: [...voicing.lHand, addInterval(first(voicing.lHand)!, 7)],
-    }));
+    const withLeftHandDoubling = allVoicings.map((voicing) => {
+      if (voicing.lHand.slice(1).includes(voicing.lHand[0])) {
+        return voicing;
+      }
+
+      return {
+        ...voicing,
+        lHand: [...voicing.lHand, addInterval(first(voicing.lHand)!, 7)],
+      };
+    });
 
     if (!settings.leftHandOctaveDoubling.includes("no")) {
       allVoicings.length = 0;
