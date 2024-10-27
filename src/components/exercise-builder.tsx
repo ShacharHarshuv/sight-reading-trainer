@@ -173,8 +173,24 @@ export default function ExerciseBuilder() {
       </Stack>
       <Row class="mb-3">
         <Form.Group as={Col}>
-          <Form.Label>Max Interval</Form.Label>
+          <Form.Label>Max Melodic Interval</Form.Label>
           <form.Field name="maxInterval">
+            {(field) => (
+              <>
+                <NumberField
+                  value={field().state.value}
+                  min={2}
+                  offset={1}
+                  onChange={(newValue) => field().handleChange(newValue)}
+                />
+              </>
+            )}
+          </form.Field>
+        </Form.Group>
+
+        <Form.Group as={Col}>
+          <Form.Label>Max Bass Interval</Form.Label>
+          <form.Field name="maxBassInterval">
             {(field) => (
               <>
                 <NumberField

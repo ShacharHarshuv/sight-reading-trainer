@@ -29,6 +29,7 @@ export interface ExerciseSettings {
   rhRange: NaturalRange;
   lhRange: NaturalRange;
   maxInterval: number;
+  maxBassInterval: number;
   maxOverallRange: number;
 }
 
@@ -115,7 +116,34 @@ export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
             lHandRange: config.lhRange,
           });
         })
-        .filter((option) => !isEqual(option, lastAbcVoicing));
+        .filter((option) => !isEqual(option, lastAbcVoicing))
+        .filter((option) => {
+          if (
+            !lastAbcVoicing ||
+            option.rHand.length + option.lHand.length === 1
+          ) {
+            return true;
+          }
+
+          const lastBass = first(lastAbcVoicing.lHand);
+
+          if (!lastBass) {
+            return true;
+          }
+
+          const currentBass = first(option.lHand);
+
+          if (!currentBass) {
+            return true;
+          }
+
+          return (
+            Math.abs(
+              abcPitchToNaturalPitchNumber(currentBass) -
+                abcPitchToNaturalPitchNumber(lastBass),
+            ) <= config.maxBassInterval
+          );
+        });
 
       if (isEmpty(options)) {
         console.error("No options available", {

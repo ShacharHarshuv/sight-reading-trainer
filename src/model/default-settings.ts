@@ -14,5 +14,6 @@ export const defaultSettings: ExerciseSettings = {
   rhRange: naturalRange("A,", "C''"),
   lhRange: naturalRange("C,,", "E"),
   maxInterval: 7,
+  maxBassInterval: 4,
   maxOverallRange: 11,
 };
