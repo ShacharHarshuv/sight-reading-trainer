@@ -43,11 +43,23 @@ const romanNumeralToScaleDegree: Partial<Record<RomanNumeral, ScaleDegree>> = {
   viio: "7",
 };
 
+const positionToNormalizedNumericInterval: Record<
+  ExerciseSettings["positions"][number],
+  number
+> = {
+  "8th": 0,
+  "3rd": 2,
+  "5th": 4,
+};
+
 export function chordVoicings(
   chord: RomanNumeralChord,
   settings: Pick<
     ExerciseSettings,
-    "voicing" | "rightHandOctaveDoubling" | "leftHandOctaveDoubling"
+    | "voicing"
+    | "rightHandOctaveDoubling"
+    | "leftHandOctaveDoubling"
+    | "positions"
   >,
 ) {
   const match = chord.match(/^(.*?)(6|64)?$/);
@@ -70,11 +82,23 @@ export function chordVoicings(
 
   const closeVoicings: ScaleDegreeVoicing[] = [];
 
+  const allowedSopranoPositionsInNumbers = settings.positions.map(
+    (position) => positionToNormalizedNumericInterval[position],
+  );
+
   for (let i = 0; i < pitches.length; i++) {
-    closeVoicings.push({
-      rHand: [...pitches],
-      lHand: [bass],
-    });
+    const sopranoVoice = last(pitches)!;
+    let intervalToRoot = +sopranoVoice - +root;
+    if (intervalToRoot < 0) {
+      intervalToRoot += 7;
+    }
+
+    if (allowedSopranoPositionsInNumbers.includes(intervalToRoot)) {
+      closeVoicings.push({
+        rHand: [...pitches],
+        lHand: [bass],
+      });
+    }
 
     const firstPitch = pitches.shift()!;
     pitches.push(firstPitch);

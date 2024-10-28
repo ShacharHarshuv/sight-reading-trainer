@@ -43,7 +43,10 @@ export default function ExerciseBuilder() {
     console.log("savedSettings", savedSettings);
 
     form.update({
-      defaultValues: savedSettings,
+      defaultValues: {
+        ...defaultSettings,
+        ...savedSettings,
+      },
     });
     form.handleSubmit();
   });
@@ -151,6 +154,21 @@ export default function ExerciseBuilder() {
           </form.Field>
         </Form.Group>
         <Form.Group class="mb-3">
+          <Form.Label>Positions</Form.Label>
+          <form.Field name="positions">
+            {(field) => (
+              <ButtonGroupMultiSelect
+                options={["5th", "8th", "3rd"]}
+                value={field().state.value}
+                onChange={(newValue) => field().handleChange(newValue)}
+                getView={(value) =>
+                  value.charAt(0).toUpperCase() + value.slice(1)
+                }
+              />
+            )}
+          </form.Field>
+        </Form.Group>
+        <Form.Group class="mb-3">
           <Form.Label>Voicings</Form.Label>
           <form.Field name="voicing">
             {(field) => (
@@ -166,34 +184,39 @@ export default function ExerciseBuilder() {
           </form.Field>
         </Form.Group>
         <Form.Group class="mb-3">
-          <Form.Label>Left Hand Octave Doubling</Form.Label>
-          <form.Field name="leftHandOctaveDoubling">
-            {(field) => (
-              <ButtonGroupMultiSelect
-                options={["yes", "no"]}
-                value={field().state.value}
-                onChange={(newValue) => field().handleChange(newValue)}
-                getView={(value) =>
-                  value.charAt(0).toUpperCase() + value.slice(1)
-                }
-              />
-            )}
-          </form.Field>
-        </Form.Group>
-        <Form.Group class="mb-3">
-          <Form.Label>Right Hand Octave Doubling</Form.Label>
-          <form.Field name="rightHandOctaveDoubling">
-            {(field) => (
-              <ButtonGroupMultiSelect
-                options={["yes", "no"]}
-                value={field().state.value}
-                onChange={(newValue) => field().handleChange(newValue)}
-                getView={(value) =>
-                  value.charAt(0).toUpperCase() + value.slice(1)
-                }
-              />
-            )}
-          </form.Field>
+          <Form.Label>Octave Doubling</Form.Label>
+          <Stack direction="horizontal" gap={3}>
+            <Form.Group class="mb-3">
+              <Form.Label>Left Hand</Form.Label>
+              <form.Field name="leftHandOctaveDoubling">
+                {(field) => (
+                  <ButtonGroupMultiSelect
+                    options={["yes", "no"]}
+                    value={field().state.value}
+                    onChange={(newValue) => field().handleChange(newValue)}
+                    getView={(value) =>
+                      value.charAt(0).toUpperCase() + value.slice(1)
+                    }
+                  />
+                )}
+              </form.Field>
+            </Form.Group>
+            <Form.Group class="mb-3">
+              <Form.Label>Right Hand</Form.Label>
+              <form.Field name="rightHandOctaveDoubling">
+                {(field) => (
+                  <ButtonGroupMultiSelect
+                    options={["yes", "no"]}
+                    value={field().state.value}
+                    onChange={(newValue) => field().handleChange(newValue)}
+                    getView={(value) =>
+                      value.charAt(0).toUpperCase() + value.slice(1)
+                    }
+                  />
+                )}
+              </form.Field>
+            </Form.Group>
+          </Stack>
         </Form.Group>
       </Stack>
       <Row class="mb-3">

@@ -25,6 +25,7 @@ export interface ExerciseSettings {
   voicing: readonly ("open" | "close")[];
   leftHandOctaveDoubling: readonly ("no" | "yes")[];
   rightHandOctaveDoubling: readonly ("no" | "yes")[];
+  positions: readonly ("8th" | "3rd" | "5th")[];
   tonic: PitchClass;
   rhRange: NaturalRange;
   lhRange: NaturalRange;
