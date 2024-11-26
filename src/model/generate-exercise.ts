@@ -61,6 +61,13 @@ function getScaleDegreeVoicings(
   return [...individualNotes, ...chords];
 }
 
+const lowerThresholdForFifths = abcPitchToNaturalPitchNumber("C,");
+const fifthIntervalNumber =
+  abcPitchToNaturalPitchNumber("G") - abcPitchToNaturalPitchNumber("C");
+const octaveIntervalNumber =
+  abcPitchToNaturalPitchNumber("C,,") - abcPitchToNaturalPitchNumber("C,");
+const lowerThresholdForOctave = abcPitchToNaturalPitchNumber("C,,");
+
 export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
   let lastAbcVoicing: AbcPitchVoicing | null = null;
   let highestSoprano: AbcPitch | null = null;
@@ -140,6 +147,31 @@ export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
                 abcPitchToNaturalPitchNumber(lastBass),
             ) <= config.maxBassInterval
           );
+        })
+        // avoid small intervals in the lower range
+        .filter((option) => {
+          const naturalPitchNumbers = [...option.rHand, ...option.lHand]
+            .map(abcPitchToNaturalPitchNumber)
+            .sort();
+          for (i = 0; i < naturalPitchNumbers.length - 2; i++) {
+            const naturalInterval =
+              naturalPitchNumbers[i + 1] - naturalPitchNumbers[i];
+            if (
+              naturalInterval < fifthIntervalNumber &&
+              naturalPitchNumbers[i] < lowerThresholdForFifths &&
+              naturalPitchNumbers[i + 1] < lowerThresholdForFifths
+            ) {
+              return false;
+            }
+            if (
+              naturalInterval < octaveIntervalNumber &&
+              naturalPitchNumbers[i] < lowerThresholdForOctave &&
+              naturalPitchNumbers[i + 1] < lowerThresholdForOctave
+            ) {
+              return false;
+            }
+          }
+          return true;
         });
 
       if (isEmpty(options)) {
