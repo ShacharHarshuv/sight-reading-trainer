@@ -1,5 +1,5 @@
 import { Pagination } from "solid-bootstrap";
-import { JSXElement } from "solid-js";
+import { JSXElement, createMemo } from "solid-js";
 
 export function ButtonGroupMultiSelect<T extends string>(props: {
   options: readonly T[] | T[][];
@@ -15,13 +15,17 @@ export function ButtonGroupMultiSelect<T extends string>(props: {
     }
   }
 
-  if (!Array.isArray(props.options[0])) {
-    props.options = [props.options as T[]];
-  }
+  const normalizedOptions = createMemo(() => {
+    if (!Array.isArray(props.options[0])) {
+      return [props.options as T[]];
+    }
+
+    return props.options as T[][];
+  });
 
   return (
     <div>
-      {(props.options as T[][]).map((options) => (
+      {normalizedOptions().map((options) => (
         <Pagination>
           {options.map((option) => (
             <Pagination.Item

@@ -9,7 +9,7 @@ type AugmentedRomanNumeral = `${MajorRomanNumeral}${"+"}`;
 export type RomanNumeral =
   `${"#" | "b" | ""}${MajorRomanNumeral | MinorRomanNumeral | DiminishedRomanNumeral | AugmentedRomanNumeral}`;
 
-export type ChordType = "" | "6" | "64";
+export type ChordType = "" | "6" | "64" | "7";
 
 export type RomanNumeralChord = `${RomanNumeral}${ChordType}`;
 

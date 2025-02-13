@@ -11,7 +11,7 @@ export const scaleDegreesOptions: ScaleDegree[] = [
   "7",
 ];
 
-const chordTypes = ["", "6", "64"] as const;
+const chordTypes = ["", "6", "64", "7"] as const;
 
 export const chordsOptions: RomanNumeralChord[][] = chordTypes.map(
   (chordType) =>

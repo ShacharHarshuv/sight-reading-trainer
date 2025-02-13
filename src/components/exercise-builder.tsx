@@ -1,16 +1,24 @@
 import { clientOnly } from "@solidjs/start";
 import { createForm } from "@tanstack/solid-form";
 import { Button, ButtonGroup, Col, Form, Row, Stack } from "solid-bootstrap";
-import { Show, createEffect, createSignal, onMount } from "solid-js";
+import {
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  onMount,
+} from "solid-js";
 import { ButtonGroupMultiSelect } from "~/components/form/button-group-multi-select";
 import { ButtonGroupSelect } from "~/components/form/button-group-select";
 import { NumberField } from "~/components/form/number-field";
 import { RangePicker } from "~/components/form/range-picker";
+import { getChordTypeConfig } from "~/model/chord-type-config";
 import { defaultSettings } from "~/model/default-settings";
 import { formatChord } from "~/model/format-chord";
-import { ExerciseSettings } from "~/model/generate-exercise";
+import { ExerciseSettings, VoicingPosition } from "~/model/generate-exercise";
 import { NaturalRange } from "~/model/natural-range";
 import { chordsOptions, scaleDegreesOptions } from "~/model/options";
+import { parseChord } from "~/model/parse-chord";
 import { pitchClasses } from "~/model/pitch-class";
 
 const ExerciseNotation = clientOnly(() => import("./exercise-notation"));
@@ -26,13 +34,27 @@ export default function ExerciseBuilder() {
   const [showTonicIndication, setShowTonicIndication] = createSignal(false);
 
   const exerciseSettings = form.useStore((state) => state.values);
+  const selectedChords = createMemo(() => exerciseSettings().chords);
+  const isChordsSelected = createMemo(() => !!selectedChords().length);
+  const relevantPositions = createMemo((): VoicingPosition[] => {
+    const triadPositions: VoicingPosition[] = ["5th", "8th", "3rd"];
+    // consider creating a smarter check as we add more extensions
+    if (
+      selectedChords().some(
+        (chord) => getChordTypeConfig(parseChord(chord).type).numberOfNotes > 3,
+      )
+    ) {
+      return ["7th", ...triadPositions];
+    } else {
+      return triadPositions;
+    }
+  });
   const canSubmit = form.useStore((state) => state.canSubmit);
   const defaultRhRange: NaturalRange = [...defaultSettings.rhRange]; // for some reason defaultSettings is being overridden, though it really shouldn't
   const defaultLhRange: NaturalRange = [...defaultSettings.lhRange]; // for some reason defaultSettings is being overridden, though it really shouldn't
   const selectedHand = form.useStore((state) => state.values.hand);
 
   onMount(() => {
-    console.log("onMount");
     const savedSettingsValue = localStorage.getItem("exerciseSettings");
 
     if (!savedSettingsValue) {
@@ -40,7 +62,7 @@ export default function ExerciseBuilder() {
     }
 
     const savedSettings = JSON.parse(savedSettingsValue) as ExerciseSettings;
-    console.log("savedSettings", savedSettings);
+    console.log("loaded settings", savedSettings);
 
     form.update({
       defaultValues: {
@@ -52,7 +74,7 @@ export default function ExerciseBuilder() {
   });
 
   createEffect(() => {
-    console.log("effect");
+    console.log("saving exerciseSettings", exerciseSettings());
     localStorage.setItem(
       "exerciseSettings",
       JSON.stringify(exerciseSettings()),
@@ -153,45 +175,14 @@ export default function ExerciseBuilder() {
             )}
           </form.Field>
         </Form.Group>
-        <Form.Group class="mb-3">
-          <Form.Label>Positions</Form.Label>
-          <form.Field name="positions">
-            {(field) => (
-              <ButtonGroupMultiSelect
-                options={["5th", "8th", "3rd"]}
-                value={field().state.value}
-                onChange={(newValue) => field().handleChange(newValue)}
-                getView={(value) =>
-                  value.charAt(0).toUpperCase() + value.slice(1)
-                }
-              />
-            )}
-          </form.Field>
-        </Form.Group>
-        <Form.Group class="mb-3">
-          <Form.Label>Voicings</Form.Label>
-          <form.Field name="voicing">
-            {(field) => (
-              <ButtonGroupMultiSelect
-                options={["close", "open"]}
-                value={field().state.value}
-                onChange={(newValue) => field().handleChange(newValue)}
-                getView={(value) =>
-                  value.charAt(0).toUpperCase() + value.slice(1)
-                }
-              />
-            )}
-          </form.Field>
-        </Form.Group>
-        <Form.Group class="mb-3">
-          <Form.Label>Octave Doubling</Form.Label>
-          <Stack direction="horizontal" gap={3}>
+        {isChordsSelected() && (
+          <>
             <Form.Group class="mb-3">
-              <Form.Label>Left Hand</Form.Label>
-              <form.Field name="leftHandOctaveDoubling">
+              <Form.Label>Positions</Form.Label>
+              <form.Field name="positions">
                 {(field) => (
                   <ButtonGroupMultiSelect
-                    options={["yes", "no"]}
+                    options={relevantPositions()}
                     value={field().state.value}
                     onChange={(newValue) => field().handleChange(newValue)}
                     getView={(value) =>
@@ -202,11 +193,11 @@ export default function ExerciseBuilder() {
               </form.Field>
             </Form.Group>
             <Form.Group class="mb-3">
-              <Form.Label>Right Hand</Form.Label>
-              <form.Field name="rightHandOctaveDoubling">
+              <Form.Label>Voicings</Form.Label>
+              <form.Field name="voicing">
                 {(field) => (
                   <ButtonGroupMultiSelect
-                    options={["yes", "no"]}
+                    options={["close", "open"]}
                     value={field().state.value}
                     onChange={(newValue) => field().handleChange(newValue)}
                     getView={(value) =>
@@ -216,8 +207,43 @@ export default function ExerciseBuilder() {
                 )}
               </form.Field>
             </Form.Group>
-          </Stack>
-        </Form.Group>
+            <Form.Group class="mb-3">
+              <Form.Label>Octave Doubling</Form.Label>
+              <Stack direction="horizontal" gap={3}>
+                <Form.Group class="mb-3">
+                  <Form.Label>Left Hand</Form.Label>
+                  <form.Field name="leftHandOctaveDoubling">
+                    {(field) => (
+                      <ButtonGroupMultiSelect
+                        options={["yes", "no"]}
+                        value={field().state.value}
+                        onChange={(newValue) => field().handleChange(newValue)}
+                        getView={(value) =>
+                          value.charAt(0).toUpperCase() + value.slice(1)
+                        }
+                      />
+                    )}
+                  </form.Field>
+                </Form.Group>
+                <Form.Group class="mb-3">
+                  <Form.Label>Right Hand</Form.Label>
+                  <form.Field name="rightHandOctaveDoubling">
+                    {(field) => (
+                      <ButtonGroupMultiSelect
+                        options={["yes", "no"]}
+                        value={field().state.value}
+                        onChange={(newValue) => field().handleChange(newValue)}
+                        getView={(value) =>
+                          value.charAt(0).toUpperCase() + value.slice(1)
+                        }
+                      />
+                    )}
+                  </form.Field>
+                </Form.Group>
+              </Stack>
+            </Form.Group>
+          </>
+        )}
       </Stack>
       <Row class="mb-3">
         <Form.Group as={Col}>

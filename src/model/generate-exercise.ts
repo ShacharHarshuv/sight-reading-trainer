@@ -17,6 +17,8 @@ import { AbcPitchVoicing, ScaleDegreeVoicing } from "~/model/voicing";
 import { scaleDegreeVoicingToAbcPitchesOptions } from "~/model/voicing-to-abc-pitches-options";
 import { isDefined } from "~/ts-utils/is-defined";
 
+export type VoicingPosition = "8th" | "3rd" | "5th" | "7th";
+
 export interface ExerciseSettings {
   numberOfSegments: number;
   scaleDegrees: readonly ScaleDegree[];
@@ -25,7 +27,7 @@ export interface ExerciseSettings {
   voicing: readonly ("open" | "close")[];
   leftHandOctaveDoubling: readonly ("no" | "yes")[];
   rightHandOctaveDoubling: readonly ("no" | "yes")[];
-  positions: readonly ("8th" | "3rd" | "5th")[];
+  positions: readonly VoicingPosition[];
   tonic: PitchClass;
   rhRange: NaturalRange;
   lhRange: NaturalRange;

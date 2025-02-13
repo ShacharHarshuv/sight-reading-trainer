@@ -10,7 +10,7 @@ export const defaultSettings: ExerciseSettings = {
   voicing: ["close"],
   leftHandOctaveDoubling: ["no"],
   rightHandOctaveDoubling: ["no"],
-  positions: ["8th", "3rd", "5th"],
+  positions: ["8th", "3rd", "5th", "7th"],
   tonic: "C",
   rhRange: naturalRange("A,", "C''"),
   lhRange: naturalRange("C,,", "E"),

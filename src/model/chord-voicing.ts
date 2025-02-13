@@ -1,10 +1,8 @@
 import { first, last } from "lodash";
+import { getChordTypeConfig } from "~/model/chord-type-config";
 import { ExerciseSettings } from "~/model/generate-exercise";
-import {
-  ChordType,
-  RomanNumeral,
-  RomanNumeralChord,
-} from "~/model/roman-numeral-chord";
+import { parseChord } from "~/model/parse-chord";
+import { RomanNumeralChord } from "~/model/roman-numeral-chord";
 import { ScaleDegree } from "~/model/scale-degree";
 import { ScaleDegreeVoicing } from "~/model/voicing";
 
@@ -27,22 +25,6 @@ function buildThirds(root: ScaleDegree, numberOfNotes: number) {
   return notes;
 }
 
-const bassIndexFromInversion: Record<ChordType, number> = {
-  "": 0,
-  "6": 1,
-  "64": 2,
-};
-
-const romanNumeralToScaleDegree: Partial<Record<RomanNumeral, ScaleDegree>> = {
-  I: "1",
-  ii: "2",
-  iii: "3",
-  IV: "4",
-  V: "5",
-  vi: "6",
-  viio: "7",
-};
-
 const positionToNormalizedNumericInterval: Record<
   ExerciseSettings["positions"][number],
   number
@@ -50,6 +32,7 @@ const positionToNormalizedNumericInterval: Record<
   "8th": 0,
   "3rd": 2,
   "5th": 4,
+  "7th": 6,
 };
 
 export function chordVoicings(
@@ -62,22 +45,10 @@ export function chordVoicings(
     | "positions"
   >,
 ) {
-  const match = chord.match(/^(.*?)(6|64)?$/);
+  const { root, type } = parseChord(chord);
+  const { bassIndex, numberOfNotes } = getChordTypeConfig(type);
 
-  if (!match) {
-    throw new Error(`Invalid chord: ${chord}`);
-  }
-
-  const [, base, chordType] = match;
-
-  const bassIndex = bassIndexFromInversion[(chordType ?? "") as ChordType];
-  const root = romanNumeralToScaleDegree[base as RomanNumeral];
-
-  if (!root) {
-    throw new Error(`Chord ${chord} is not supported`);
-  }
-
-  const pitches = buildThirds(root, 3);
+  const pitches = buildThirds(root, numberOfNotes);
   const bass = pitches[bassIndex];
 
   const closeVoicings: ScaleDegreeVoicing[] = [];
