@@ -1,42 +1,73 @@
-import { expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 import { chordVoicings } from "~/model/chord-voicing";
-import { ExerciseSettings } from "~/model/generate-exercise";
 
-const baseSettings: Pick<
-  ExerciseSettings,
-  "voicing" | "rightHandOctaveDoubling" | "leftHandOctaveDoubling" | "positions"
-> = {
+const baseSettings: Parameters<typeof chordVoicings>[1] = {
   leftHandOctaveDoubling: ["no"],
   rightHandOctaveDoubling: ["no"],
   positions: ["5th"],
   voicing: ["close"],
+  bassDoubling: ["only triads"],
 };
 
-test("should work", () => {
-  expect(chordVoicings("I", baseSettings)).toEqual([
-    {
-      lHand: ["1"],
-      rHand: ["1", "3", "5"],
-    },
-  ]);
+describe("chord voicing", () => {
+  test("basic triad", () => {
+    expect(chordVoicings("I", baseSettings)).toEqual([
+      {
+        lHand: ["1"],
+        rHand: ["1", "3", "5"],
+      },
+    ]);
+  });
 
-  expect(chordVoicings("I7", baseSettings)).toEqual([
-    {
-      lHand: ["1"],
-      rHand: ["7", "1", "3", "5"],
-    },
-  ]);
+  test("triad w/o bass doubling", () => {
+    expect(
+      chordVoicings("I", {
+        ...baseSettings,
+        bassDoubling: ["no"],
+      }),
+    ).toEqual([
+      {
+        lHand: ["1"],
+        rHand: ["3", "5"],
+      },
+    ]);
+  });
 
-  expect(
-    chordVoicings("I7", {
-      ...baseSettings,
-      positions: ["7th"],
-      // todo: add an option to "drop the bass" in this case (very common). In the future, we need to enable dropping other notes like 5th
-    }),
-  ).toEqual([
-    {
-      lHand: ["1"],
-      rHand: ["1", "3", "5", "7"],
-    },
-  ]);
+  test("diatonic 7th chord", () => {
+    expect(chordVoicings("I7", baseSettings)).toEqual([
+      {
+        lHand: ["1"],
+        rHand: ["7", "3", "5"],
+      },
+    ]);
+  });
+
+  test("diatonic 7th chord in 7th position", () => {
+    expect(
+      chordVoicings("I7", {
+        ...baseSettings,
+        positions: ["7th"],
+      }),
+    ).toEqual([
+      {
+        lHand: ["1"],
+        rHand: ["3", "5", "7"],
+      },
+    ]);
+  });
+
+  test("diatonic 7th chord with bass doubling", () => {
+    expect(
+      chordVoicings("I7", {
+        ...baseSettings,
+        positions: ["7th"],
+        bassDoubling: ["yes"],
+      }),
+    ).toEqual([
+      {
+        lHand: ["1"],
+        rHand: ["1", "3", "5", "7"],
+      },
+    ]);
+  });
 });

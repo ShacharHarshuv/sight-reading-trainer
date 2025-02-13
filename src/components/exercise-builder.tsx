@@ -169,7 +169,19 @@ export default function ExerciseBuilder() {
               <ButtonGroupMultiSelect
                 options={chordsOptions}
                 value={field().state.value}
-                onChange={(newValue) => field().handleChange(newValue)}
+                onChange={(newValue) => {
+                  field().handleChange(newValue);
+                  if (
+                    exerciseSettings().positions.filter((position) =>
+                      relevantPositions().includes(position),
+                    ).length === 0
+                  ) {
+                    form.setFieldValue(
+                      "positions",
+                      (prev) => [...prev, "5th"] as const,
+                    );
+                  }
+                }}
                 getView={formatChord}
               />
             )}
@@ -184,7 +196,18 @@ export default function ExerciseBuilder() {
                   <ButtonGroupMultiSelect
                     options={relevantPositions()}
                     value={field().state.value}
-                    onChange={(newValue) => field().handleChange(newValue)}
+                    onChange={(newValue, lastChanged) => {
+                      console.log("new value", newValue);
+                      if (
+                        newValue.filter((position) =>
+                          relevantPositions().includes(position),
+                        ).length === 0
+                      ) {
+                        newValue.push(lastChanged);
+                      }
+
+                      field().handleChange(newValue);
+                    }}
                     getView={(value) =>
                       value.charAt(0).toUpperCase() + value.slice(1)
                     }
@@ -199,7 +222,49 @@ export default function ExerciseBuilder() {
                   <ButtonGroupMultiSelect
                     options={["close", "open"]}
                     value={field().state.value}
-                    onChange={(newValue) => field().handleChange(newValue)}
+                    onChange={(newValue, lastChanged) => {
+                      if (newValue.length === 0) {
+                        newValue =
+                          lastChanged === "close" ? ["open"] : ["close"];
+                      }
+
+                      field().handleChange(newValue);
+                    }}
+                    getView={(value) =>
+                      value.charAt(0).toUpperCase() + value.slice(1)
+                    }
+                  />
+                )}
+              </form.Field>
+              <Form.Label>Double Bass</Form.Label>
+              <form.Field name="bassDoubling">
+                {(field) => (
+                  <ButtonGroupMultiSelect
+                    options={["no", "only triads", "yes"]}
+                    value={field().state.value}
+                    onChange={(newValue, lastChanged) => {
+                      if (newValue.length === 0) {
+                        newValue =
+                          lastChanged === "no" ? ["only triads"] : ["no"];
+                      }
+
+                      if (
+                        lastChanged === "only triads" &&
+                        newValue.includes("only triads") &&
+                        newValue.includes("yes")
+                      ) {
+                        newValue = newValue.filter((v) => v !== "yes");
+                      }
+                      if (
+                        lastChanged === "yes" &&
+                        newValue.includes("only triads") &&
+                        newValue.includes("yes")
+                      ) {
+                        newValue = newValue.filter((v) => v !== "only triads");
+                      }
+
+                      field().handleChange(newValue);
+                    }}
                     getView={(value) =>
                       value.charAt(0).toUpperCase() + value.slice(1)
                     }
@@ -217,7 +282,12 @@ export default function ExerciseBuilder() {
                       <ButtonGroupMultiSelect
                         options={["yes", "no"]}
                         value={field().state.value}
-                        onChange={(newValue) => field().handleChange(newValue)}
+                        onChange={(newValue, lastChanged) => {
+                          if (newValue.length === 0) {
+                            newValue = lastChanged === "yes" ? ["no"] : ["yes"];
+                          }
+                          field().handleChange(newValue);
+                        }}
                         getView={(value) =>
                           value.charAt(0).toUpperCase() + value.slice(1)
                         }
@@ -232,7 +302,12 @@ export default function ExerciseBuilder() {
                       <ButtonGroupMultiSelect
                         options={["yes", "no"]}
                         value={field().state.value}
-                        onChange={(newValue) => field().handleChange(newValue)}
+                        onChange={(newValue, lastChanged) => {
+                          if (newValue.length === 0) {
+                            newValue = lastChanged === "yes" ? ["no"] : ["yes"];
+                          }
+                          field().handleChange(newValue);
+                        }}
                         getView={(value) =>
                           value.charAt(0).toUpperCase() + value.slice(1)
                         }

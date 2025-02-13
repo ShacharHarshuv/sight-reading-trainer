@@ -25,6 +25,7 @@ export interface ExerciseSettings {
   hand: "left" | "right"; // relevant only for "Scale Degrees"
   chords: readonly RomanNumeralChord[];
   voicing: readonly ("open" | "close")[];
+  bassDoubling: readonly ("no" | "only triads" | "yes")[];
   leftHandOctaveDoubling: readonly ("no" | "yes")[];
   rightHandOctaveDoubling: readonly ("no" | "yes")[];
   positions: readonly VoicingPosition[];
@@ -109,7 +110,6 @@ export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
       const voicings = getScaleDegreeVoicings(config);
 
       if (isEmpty(voicings)) {
-        console.log("Nothing is selected");
         return [[], []];
       }
 

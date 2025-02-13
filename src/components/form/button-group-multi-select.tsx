@@ -5,13 +5,16 @@ export function ButtonGroupMultiSelect<T extends string>(props: {
   options: readonly T[] | T[][];
   value: readonly T[];
   getView?: (option: T) => JSXElement;
-  onChange: (value: T[]) => void;
+  onChange: (value: T[], lastChanged: T) => void;
 }) {
   function toggleOption(option: T) {
     if (props.value.includes(option)) {
-      props.onChange(props.value.filter((v) => v !== option));
+      props.onChange(
+        props.value.filter((v) => v !== option),
+        option,
+      );
     } else {
-      props.onChange([...props.value, option]);
+      props.onChange([...props.value, option], option);
     }
   }
 

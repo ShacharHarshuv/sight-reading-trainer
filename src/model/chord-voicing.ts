@@ -43,13 +43,29 @@ export function chordVoicings(
     | "rightHandOctaveDoubling"
     | "leftHandOctaveDoubling"
     | "positions"
+    | "bassDoubling"
   >,
 ) {
   const { root, type } = parseChord(chord);
   const { bassIndex, numberOfNotes } = getChordTypeConfig(type);
 
-  const pitches = buildThirds(root, numberOfNotes);
-  const bass = pitches[bassIndex];
+  const basePitches = buildThirds(root, numberOfNotes);
+  const bass = basePitches[bassIndex];
+  const doubleBass =
+    settings.bassDoubling.includes("yes") ||
+    (settings.bassDoubling.includes("only triads") && numberOfNotes === 3);
+  const noDoubleBass =
+    settings.bassDoubling.includes("no") ||
+    (settings.bassDoubling.includes("only triads") && numberOfNotes > 3);
+  const voicedPitchesOptions: (typeof basePitches)[] = [];
+  if (doubleBass) {
+    voicedPitchesOptions.push(basePitches);
+  }
+  if (noDoubleBass) {
+    voicedPitchesOptions.push(
+      basePitches.filter((_, index) => index !== bassIndex),
+    );
+  }
 
   const closeVoicings: ScaleDegreeVoicing[] = [];
 
@@ -57,22 +73,24 @@ export function chordVoicings(
     (position) => positionToNormalizedNumericInterval[position],
   );
 
-  for (let i = 0; i < pitches.length; i++) {
-    const sopranoVoice = last(pitches)!;
-    let intervalToRoot = +sopranoVoice - +root;
-    if (intervalToRoot < 0) {
-      intervalToRoot += 7;
-    }
+  for (let pitches of voicedPitchesOptions) {
+    for (let i = 0; i < pitches.length; i++) {
+      const sopranoVoice = last(pitches)!;
+      let intervalToRoot = +sopranoVoice - +root;
+      if (intervalToRoot < 0) {
+        intervalToRoot += 7;
+      }
 
-    if (allowedSopranoPositionsInNumbers.includes(intervalToRoot)) {
-      closeVoicings.push({
-        rHand: [...pitches],
-        lHand: [bass],
-      });
-    }
+      if (allowedSopranoPositionsInNumbers.includes(intervalToRoot)) {
+        closeVoicings.push({
+          rHand: [...pitches],
+          lHand: [bass],
+        });
+      }
 
-    const firstPitch = pitches.shift()!;
-    pitches.push(firstPitch);
+      const firstPitch = pitches.shift()!;
+      pitches.push(firstPitch);
+    }
   }
 
   const openVoicings = closeVoicings.map((closeVoicings) => {
