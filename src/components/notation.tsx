@@ -5,7 +5,7 @@ export default function Notation(props: {
   notation: string;
   options?: abcjs.AbcVisualParams;
 }) {
-  let container: HTMLDivElement;
+  let container: HTMLDivElement | undefined = undefined;
   const [tuneObject, setTuneObject] = createSignal<TuneObject | null>(null);
   const warnings = createMemo(() => tuneObject()?.warnings);
 
@@ -31,9 +31,7 @@ export default function Notation(props: {
       <div ref={container}></div>
       {warnings() && (
         <ul>
-          {warnings().map((warning, i) => (
-            <li key={i} dangerouslySetInnerHTML={{ __html: warning }}></li>
-          ))}
+          {warnings()?.map((warning, i) => <li innerHTML={warning}></li>)}
         </ul>
       )}
     </>
