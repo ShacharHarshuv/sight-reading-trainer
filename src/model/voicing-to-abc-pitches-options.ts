@@ -1,6 +1,7 @@
 import { mapValues } from "lodash";
 import { parseAbcPitch } from "~/model/abc-pitch";
 import {
+  NaturalPitchNumber,
   abcPitchToNaturalPitchNumber,
   naturalPitchNumberToAbcPitch,
 } from "~/model/natural-pitch-number";
@@ -9,6 +10,7 @@ import {
   allNaturalPitchNumbersInRange,
   intersectNaturalRanges,
   isInNaturalRange,
+  naturalRange,
 } from "~/model/natural-range";
 import { PitchClass } from "~/model/pitch-class";
 import { scaleDegreeToAbcNaturalPitchClass } from "~/model/scale-degree-to-abc-natural-pitch-class";
@@ -17,6 +19,9 @@ import {
   PitchClassVoicing,
   ScaleDegreeVoicing,
 } from "~/model/voicing";
+
+const maxHandSize = 10; // todo: consider enable customizing this in the UI later
+const octave = 8;
 
 export function scaleDegreeVoicingToAbcPitchesOptions(
   voicing: ScaleDegreeVoicing,
@@ -73,10 +78,12 @@ function pitchClassVoicingToAbcPitchesOptions(
     ];
   }
 
-  const { currentVoice, restVoicing, currentRange, hand } = ((): {
+  const { currentVoice, restVoicing, hand, nextNoteRange } = ((): {
     currentVoice: PitchClass;
     restVoicing: PitchClassVoicing;
-    currentRange: NaturalRange;
+    nextNoteRange: (
+      currentlyChosenNaturalPitch: NaturalPitchNumber,
+    ) => NaturalRange;
     hand: keyof AbcPitchVoicing;
   } => {
     // todo: there is still duplication here.
@@ -89,13 +96,18 @@ function pitchClassVoicingToAbcPitchesOptions(
           ...voicing,
           rHand: restRHandVoices,
         },
-        currentRange: intersectNaturalRanges(
-          options.sopranoRange,
-          options.range.rHand,
-        ),
+        nextNoteRange: (currentlyChosenNaturalPitch) =>
+          naturalRange(
+            // if we have more "upper voices", we need to limit by an octave. If not and we don't have upper voices in left hand, the bass can be as low as it wants
+            currentlyChosenNaturalPitch -
+              (restRHandVoices.length || voicing.lHandUpperVoices.length
+                ? octave
+                : Infinity) +
+              1,
+            currentlyChosenNaturalPitch - 1,
+          ),
       };
     } else if (voicing.lHandUpperVoices.length) {
-      console.log("voicing upper voices");
       const [currentVoice, ...restLHandUpperVoices] = voicing.lHandUpperVoices;
       return {
         hand: "lHand",
@@ -104,17 +116,17 @@ function pitchClassVoicingToAbcPitchesOptions(
           ...voicing,
           lHandUpperVoices: restLHandUpperVoices,
         },
-        currentRange: intersectNaturalRanges(
-          options.sopranoRange,
-          options.range.lHand,
-        ),
+        nextNoteRange: (currentlyChosenNaturalPitch) =>
+          // If we have no more upper voices, the bass can be as low as it wants, except we are limited hand size
+          naturalRange(
+            currentlyChosenNaturalPitch -
+              (restLHandUpperVoices.length ? octave : maxHandSize) +
+              1,
+            currentlyChosenNaturalPitch - 1,
+          ),
       };
     } else {
       const [currentVoice, ...restLHandBass] = voicing.lHandBass;
-      const bassRange = intersectNaturalRanges(
-        options.sopranoRange, // the bass can be more than an octave apart from the upper voices
-        options.range.lHand,
-      );
       return {
         hand: "lHand",
         currentVoice: currentVoice,
@@ -122,12 +134,19 @@ function pitchClassVoicingToAbcPitchesOptions(
           ...voicing,
           lHandBass: restLHandBass,
         },
-        currentRange: bassRange,
+        nextNoteRange: (currentlyChosenNaturalPitch) => {
+          return naturalRange(
+            currentlyChosenNaturalPitch - octave + 1,
+            currentlyChosenNaturalPitch - 1,
+          );
+        },
       };
     }
   })();
 
-  const currentVoiceOptions = allNaturalPitchNumbersInRange(currentRange)
+  const currentVoiceOptions = allNaturalPitchNumbersInRange(
+    intersectNaturalRanges(options.sopranoRange, options.range[hand]),
+  )
     .map(naturalPitchNumberToAbcPitch)
     .filter((sopranoOptionCandidate) => {
       const { naturalPitchClass } = parseAbcPitch(sopranoOptionCandidate);
@@ -136,14 +155,10 @@ function pitchClassVoicingToAbcPitchesOptions(
 
   const allOptions: AbcPitchVoicing[] = currentVoiceOptions.flatMap(
     (sopranoOption): AbcPitchVoicing[] => {
-      const nextVoiceRange: NaturalRange = [
-        // the voice will have to be at least a step and no more than an octave the current one
-        abcPitchToNaturalPitchNumber(sopranoOption) - 7,
-        abcPitchToNaturalPitchNumber(sopranoOption) - 1,
-      ];
-
       const restOptions = pitchClassVoicingToAbcPitchesOptions(restVoicing, {
-        sopranoRange: nextVoiceRange, // todo: we need to change it for the case that the next thing we need to do is only bass. It should be unlimited if there is no lHand upper voices, but limited by a specified interval (say, an 10th) if there are.
+        sopranoRange: nextNoteRange(
+          abcPitchToNaturalPitchNumber(sopranoOption),
+        ),
         range: options.range,
       });
 
