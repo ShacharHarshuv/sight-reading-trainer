@@ -26,7 +26,7 @@ export interface ExerciseSettings {
   chords: readonly RomanNumeralChord[];
   voicing: readonly ("open" | "close")[];
   bassDoubling: readonly ("no" | "only triads" | "yes")[];
-  leftHandOctaveDoubling: readonly ("no" | "yes")[];
+  leftHandOctaveDoubling: readonly ("no" | "yes")[]; // todo: consider renaming "double bass", as this name might be misleading in the new implementation
   rightHandOctaveDoubling: readonly ("no" | "yes")[];
   positions: readonly VoicingPosition[];
   tonic: PitchClass;
@@ -45,19 +45,23 @@ type ExerciseSegment = [AbcPitch[], AbcPitch[]];
 function getScaleDegreeVoicings(
   config: ExerciseSettings,
 ): ScaleDegreeVoicing[] {
-  const individualNotes = config.scaleDegrees.map((scaleDegree) => {
-    if (config.hand === "right") {
-      return {
-        rHand: [scaleDegree],
-        lHand: [],
-      };
-    } else {
-      return {
-        rHand: [],
-        lHand: [scaleDegree],
-      };
-    }
-  });
+  const individualNotes = config.scaleDegrees.map(
+    (scaleDegree): ScaleDegreeVoicing => {
+      if (config.hand === "right") {
+        return {
+          rHand: [scaleDegree],
+          lHandUpperVoices: [],
+          lHandBass: [],
+        };
+      } else {
+        return {
+          rHand: [],
+          lHandUpperVoices: [scaleDegree],
+          lHandBass: [],
+        };
+      }
+    },
+  );
 
   const chords = config.chords.flatMap((chord) => chordVoicings(chord, config));
 
@@ -81,7 +85,7 @@ export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
     .map((_, i): ExerciseSegment => {
       const lastSoprano =
         lastAbcVoicing &&
-        (first(lastAbcVoicing.rHand) || first(lastAbcVoicing.lHand)!);
+        first([...lastAbcVoicing.rHand, ...lastAbcVoicing.lHand]);
 
       const maxIntervalLimit =
         lastSoprano && naturalRangeFrom(lastSoprano, config.maxInterval);
@@ -96,8 +100,8 @@ export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
         const wiggleRoom =
           config.maxOverallRange - (highestNumber - lowestNumber);
         return naturalRange(
-          highestNumber + wiggleRoom,
           lowestNumber - wiggleRoom,
+          highestNumber + wiggleRoom,
         );
       })();
       const sopranoRange =
@@ -118,12 +122,21 @@ export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
           return scaleDegreeVoicingToAbcPitchesOptions(scaleDegreeVoicing, {
             key: config.tonic,
             sopranoRange,
-            rHandRange: config.rhRange,
-            lHandRange: config.lhRange,
+            range: {
+              rHand: config.rhRange,
+              lHand: config.lhRange,
+            },
           });
         })
+        // Avoid exact repetition
         .filter((option) => !isEqual(option, lastAbcVoicing))
+        // Max bass interval condition
         .filter((option) => {
+          function getBass(voicing: AbcPitchVoicing) {
+            return first(voicing.lHand);
+          }
+
+          // not relevant if only one note (not a chord)
           if (
             !lastAbcVoicing ||
             option.rHand.length + option.lHand.length === 1
@@ -131,14 +144,16 @@ export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
             return true;
           }
 
-          const lastBass = first(lastAbcVoicing.lHand);
+          const lastBass = getBass(lastAbcVoicing);
 
+          // not relevant if no last bass
           if (!lastBass) {
             return true;
           }
 
-          const currentBass = first(option.lHand);
+          const currentBass = getBass(option);
 
+          // not relevant if not current bass
           if (!currentBass) {
             return true;
           }
@@ -150,7 +165,7 @@ export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
             ) <= config.maxBassInterval
           );
         })
-        // avoid small intervals in the lower range
+        // avoid small intervals in the lower range (TODO: will we still need this after the last change)
         .filter((option) => {
           const naturalPitchNumbers = [...option.rHand, ...option.lHand]
             .map(abcPitchToNaturalPitchNumber)
@@ -190,8 +205,10 @@ export function generateExercise(config: ExerciseSettings): ExerciseSegment[] {
       const selectedOption = randomElement(options);
       lastAbcVoicing = selectedOption;
 
-      const currentSoprano =
-        first(selectedOption.rHand) || first(selectedOption.lHand)!;
+      const currentSoprano = first([
+        ...selectedOption.rHand,
+        ...selectedOption.lHand,
+      ])!;
 
       if (
         !highestSoprano ||

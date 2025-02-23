@@ -8,13 +8,16 @@ describe("pitchClassVoicingToAbcPitchesOptions", () => {
       scaleDegreeVoicingToAbcPitchesOptions(
         {
           rHand: ["3"],
-          lHand: [],
+          lHandUpperVoices: [],
+          lHandBass: [],
         },
         {
           key: "G",
           sopranoRange: naturalRange("G,", "G''"),
-          rHandRange: naturalRange("C", "C''"),
-          lHandRange: naturalRange("C,,", "E"),
+          range: {
+            rHand: naturalRange("C", "C''"),
+            lHand: naturalRange("C,,", "E"),
+          },
         },
       ),
     ).toEqual(
@@ -36,13 +39,16 @@ describe("pitchClassVoicingToAbcPitchesOptions", () => {
       scaleDegreeVoicingToAbcPitchesOptions(
         {
           rHand: [],
-          lHand: ["3"],
+          lHandUpperVoices: ["3"],
+          lHandBass: [],
         },
         {
           key: "G",
           sopranoRange: naturalRange("G,,,", "G"),
-          rHandRange: naturalRange("C", "C''"),
-          lHandRange: naturalRange("C,,", "E"),
+          range: {
+            rHand: naturalRange("C", "C''"),
+            lHand: naturalRange("C,,", "E"),
+          },
         },
       ),
     ).toEqual(

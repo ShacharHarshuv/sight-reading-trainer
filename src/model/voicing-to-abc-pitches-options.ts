@@ -7,6 +7,7 @@ import {
 import {
   NaturalRange,
   allNaturalPitchNumbersInRange,
+  intersectNaturalRanges,
   isInNaturalRange,
 } from "~/model/natural-range";
 import { PitchClass } from "~/model/pitch-class";
@@ -22,11 +23,10 @@ export function scaleDegreeVoicingToAbcPitchesOptions(
   options: {
     key: PitchClass;
     sopranoRange: NaturalRange;
-    rHandRange: NaturalRange;
-    lHandRange: NaturalRange;
+    range: { [key in keyof AbcPitchVoicing]: NaturalRange };
   },
 ): AbcPitchVoicing[] {
-  const voicingAbcPitchClasses = mapValues(
+  const voicingAbcPitchClasses: PitchClassVoicing = mapValues(
     voicing,
     (scaleDegrees) =>
       scaleDegrees
@@ -39,17 +39,16 @@ export function scaleDegreeVoicingToAbcPitchesOptions(
   return pitchClassVoicingToAbcPitchesOptions(voicingAbcPitchClasses, {
     ...options,
   }).filter((voicingOption) => {
-    return ["rHand" as const, "lHand" as const].every((hand) => {
-      return (
-        !voicingOption[hand].length ||
-        voicingOption[hand].some((abcPitch) =>
-          isInNaturalRange(
-            options[(hand + "Range") as "rHandRange" | "lHandRange"],
-            abcPitch,
-          ),
-        )
-      );
-    });
+    return (Object.keys(voicingOption) as (keyof AbcPitchVoicing)[]).every(
+      (hand) => {
+        return (
+          !voicingOption[hand].length ||
+          voicingOption[hand].some((abcPitch) =>
+            isInNaturalRange(options.range[hand], abcPitch),
+          )
+        );
+      },
+    );
   });
 }
 
@@ -57,12 +56,15 @@ function pitchClassVoicingToAbcPitchesOptions(
   voicing: PitchClassVoicing,
   options: {
     sopranoRange: NaturalRange;
-    rHandRange: NaturalRange;
-    lHandRange: NaturalRange;
+    range: { [key in keyof AbcPitchVoicing]: NaturalRange }; // todo: reuse this type? // TODO: do we really need 3 separate ranges here, or can be we just rely on the soprano range to enforce proper voicing?
   },
 ): AbcPitchVoicing[] {
   // null means the requested voicing is impossible
-  if (voicing.lHand.length === 0 && voicing.rHand.length === 0) {
+  if (
+    voicing.rHand.length === 0 &&
+    voicing.lHandUpperVoices.length === 0 &&
+    voicing.lHandBass.length === 0
+  ) {
     return [
       {
         rHand: [],
@@ -71,95 +73,88 @@ function pitchClassVoicingToAbcPitchesOptions(
     ];
   }
 
-  if (voicing.rHand.length !== 0) {
-    const [sopranoPitchClass, ...rHandRest] = voicing.rHand;
-    const sopranoOptions = allNaturalPitchNumbersInRange(options.sopranoRange)
-      .map(naturalPitchNumberToAbcPitch)
-      .filter((sopranoOptionCandidate) => {
-        const { naturalPitchClass } = parseAbcPitch(sopranoOptionCandidate);
-        return naturalPitchClass === sopranoPitchClass;
+  const { currentVoice, restVoicing, currentRange, hand } = ((): {
+    currentVoice: PitchClass;
+    restVoicing: PitchClassVoicing;
+    currentRange: NaturalRange;
+    hand: keyof AbcPitchVoicing;
+  } => {
+    // todo: there is still duplication here.
+    if (voicing.rHand.length) {
+      const [currentVoice, ...restRHandVoices] = voicing.rHand;
+      return {
+        hand: "rHand",
+        currentVoice: currentVoice,
+        restVoicing: {
+          ...voicing,
+          rHand: restRHandVoices,
+        },
+        currentRange: intersectNaturalRanges(
+          options.sopranoRange,
+          options.range.rHand,
+        ),
+      };
+    } else if (voicing.lHandUpperVoices.length) {
+      console.log("voicing upper voices");
+      const [currentVoice, ...restLHandUpperVoices] = voicing.lHandUpperVoices;
+      return {
+        hand: "lHand",
+        currentVoice: currentVoice,
+        restVoicing: {
+          ...voicing,
+          lHandUpperVoices: restLHandUpperVoices,
+        },
+        currentRange: intersectNaturalRanges(
+          options.sopranoRange,
+          options.range.lHand,
+        ),
+      };
+    } else {
+      const [currentVoice, ...restLHandBass] = voicing.lHandBass;
+      const bassRange = intersectNaturalRanges(
+        options.sopranoRange, // the bass can be more than an octave apart from the upper voices
+        options.range.lHand,
+      );
+      return {
+        hand: "lHand",
+        currentVoice: currentVoice,
+        restVoicing: {
+          ...voicing,
+          lHandBass: restLHandBass,
+        },
+        currentRange: bassRange,
+      };
+    }
+  })();
+
+  const currentVoiceOptions = allNaturalPitchNumbersInRange(currentRange)
+    .map(naturalPitchNumberToAbcPitch)
+    .filter((sopranoOptionCandidate) => {
+      const { naturalPitchClass } = parseAbcPitch(sopranoOptionCandidate);
+      return naturalPitchClass === currentVoice;
+    });
+
+  const allOptions: AbcPitchVoicing[] = currentVoiceOptions.flatMap(
+    (sopranoOption): AbcPitchVoicing[] => {
+      const nextVoiceRange: NaturalRange = [
+        // the voice will have to be at least a step and no more than an octave the current one
+        abcPitchToNaturalPitchNumber(sopranoOption) - 7,
+        abcPitchToNaturalPitchNumber(sopranoOption) - 1,
+      ];
+
+      const restOptions = pitchClassVoicingToAbcPitchesOptions(restVoicing, {
+        sopranoRange: nextVoiceRange, // todo: we need to change it for the case that the next thing we need to do is only bass. It should be unlimited if there is no lHand upper voices, but limited by a specified interval (say, an 10th) if there are.
+        range: options.range,
       });
 
-    const allOptions: AbcPitchVoicing[] = sopranoOptions.flatMap(
-      (sopranoOption): AbcPitchVoicing[] => {
-        const restOptions = pitchClassVoicingToAbcPitchesOptions(
-          {
-            rHand: rHandRest,
-            lHand: voicing.lHand,
-          },
-          {
-            sopranoRange: rHandRest.length
-              ? [
-                  abcPitchToNaturalPitchNumber(sopranoOption) - 7,
-                  abcPitchToNaturalPitchNumber(sopranoOption) - 1,
-                ]
-              : [
-                  options.lHandRange[0],
-                  abcPitchToNaturalPitchNumber(sopranoOption) - 1,
-                ],
-            rHandRange: options.rHandRange,
-            lHandRange: options.lHandRange,
-          },
-        );
+      return restOptions.map(
+        (restOption): AbcPitchVoicing => ({
+          ...restOption,
+          [hand]: [sopranoOption, ...restOption[hand]],
+        }),
+      );
+    },
+  );
 
-        return restOptions.map(
-          (restOption): AbcPitchVoicing => ({
-            rHand: [sopranoOption, ...restOption.rHand],
-            lHand: restOption.lHand,
-          }),
-        );
-      },
-    );
-
-    return allOptions;
-  } else {
-    // TODO: we need to eliminate this duplication somehow
-    const [sopranoPitchClass, ...lHandRest] = voicing.lHand;
-    const sopranoOptions = allNaturalPitchNumbersInRange(options.sopranoRange)
-      .map(naturalPitchNumberToAbcPitch)
-      .filter((sopranoOptionCandidate) => {
-        const { naturalPitchClass } = parseAbcPitch(sopranoOptionCandidate);
-        return naturalPitchClass === sopranoPitchClass;
-      });
-
-    const allOptions: AbcPitchVoicing[] = sopranoOptions
-      .flatMap((sopranoOption): AbcPitchVoicing[] => {
-        const restOptions = pitchClassVoicingToAbcPitchesOptions(
-          {
-            rHand: [],
-            lHand: lHandRest,
-          },
-          {
-            sopranoRange: [
-              abcPitchToNaturalPitchNumber(sopranoOption) - 7,
-              abcPitchToNaturalPitchNumber(sopranoOption) - 1,
-            ],
-            rHandRange: options.rHandRange,
-            lHandRange: options.lHandRange,
-          },
-        );
-
-        return restOptions.map(
-          (restOption): AbcPitchVoicing => ({
-            rHand: [],
-            lHand: [sopranoOption, ...restOption.lHand],
-          }),
-        );
-      })
-      .filter((voicingOption) => {
-        return ["rHand" as const, "lHand" as const].every((hand) => {
-          return (
-            !voicingOption[hand].length ||
-            voicingOption[hand].some((abcPitch) =>
-              isInNaturalRange(
-                options[(hand + "Range") as "rHandRange" | "lHandRange"],
-                abcPitch,
-              ),
-            )
-          );
-        });
-      });
-
-    return allOptions;
-  }
+  return allOptions;
 }

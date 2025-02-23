@@ -84,7 +84,8 @@ export function chordVoicings(
       if (allowedSopranoPositionsInNumbers.includes(intervalToRoot)) {
         closeVoicings.push({
           rHand: [...pitches],
-          lHand: [bass],
+          lHandUpperVoices: [],
+          lHandBass: [bass],
         });
       }
 
@@ -93,14 +94,17 @@ export function chordVoicings(
     }
   }
 
-  const openVoicings = closeVoicings.map((closeVoicings) => {
-    const rhNotes = [...closeVoicings.rHand];
-    const middleNote = rhNotes.splice(1, 1)[0];
-    return {
-      rHand: rhNotes,
-      lHand: [...closeVoicings.lHand, middleNote],
-    };
-  });
+  const openVoicings = closeVoicings.map(
+    (closeVoicings): ScaleDegreeVoicing => {
+      const rhNotes = [...closeVoicings.rHand];
+      const middleNote = rhNotes.splice(1, 1)[0];
+      return {
+        rHand: rhNotes,
+        lHandUpperVoices: [...closeVoicings.lHandUpperVoices, middleNote],
+        lHandBass: closeVoicings.lHandBass,
+      };
+    },
+  );
 
   const allVoicings = [];
 
@@ -113,17 +117,19 @@ export function chordVoicings(
 
   if (settings.leftHandOctaveDoubling.includes("yes")) {
     const withLeftHandDoubling = allVoicings.map((voicing) => {
-      if (voicing.lHand.slice(1).includes(voicing.lHand[0])) {
+      if (voicing.lHandUpperVoices.length !== 0) {
+        // impossible to double if the left hand already have non-bass (i.e. upper voices) notes
         return voicing;
       }
 
       return {
         ...voicing,
-        lHand: [...voicing.lHand, addInterval(first(voicing.lHand)!, 7)],
+        lHandBass: [...voicing.lHandBass, first(voicing.lHandBass)!], // double the bass
       };
     });
 
     if (!settings.leftHandOctaveDoubling.includes("no")) {
+      // existing voices has no doubling, so if we don't want that, we remove them.
       allVoicings.length = 0;
     }
 
