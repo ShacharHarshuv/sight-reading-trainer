@@ -20,7 +20,7 @@ import {
   ScaleDegreeVoicing,
 } from "~/model/voicing";
 
-const maxHandSize = 9; // todo: consider enable customizing this in the UI later
+const maxHandSize = 9; // todo: consider enable customizing this in the UI later (Note, based on https://app.todoist.com/app/task/separating-voicing-logic-from-hand-logic-6XMMqG8jQr8HCcpP we might want this setting to be separate from voicing settings)
 const octave = 8;
 
 export function scaleDegreeVoicingToAbcPitchesOptions(
@@ -61,7 +61,7 @@ function pitchClassVoicingToAbcPitchesOptions(
   voicing: PitchClassVoicing,
   options: {
     sopranoRange: NaturalRange;
-    range: { [key in keyof AbcPitchVoicing]: NaturalRange }; // todo: reuse this type? // TODO: do we really need 3 separate ranges here, or can be we just rely on the soprano range to enforce proper voicing?
+    range: { [key in keyof AbcPitchVoicing]: NaturalRange };
   },
 ): AbcPitchVoicing[] {
   // null means the requested voicing is impossible
