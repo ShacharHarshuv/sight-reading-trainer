@@ -20,7 +20,7 @@ import {
   ScaleDegreeVoicing,
 } from "~/model/voicing";
 
-const maxHandSize = 10; // todo: consider enable customizing this in the UI later
+const maxHandSize = 9; // todo: consider enable customizing this in the UI later
 const octave = 8;
 
 export function scaleDegreeVoicingToAbcPitchesOptions(
