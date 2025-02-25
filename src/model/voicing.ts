@@ -2,13 +2,19 @@ import { AbcPitch } from "~/model/abc-pitch";
 import { PitchClass } from "~/model/pitch-class";
 import { ScaleDegree } from "~/model/scale-degree";
 
-export type Voicing<Note> = {
+export type VoicingWithBassSeparation<Note> = {
+  rHand: Note[];
+  lHandUpperVoices: Note[];
+  lHandBass: Note[];
+};
+
+export type PianoVoicing<Note> = {
   rHand: Note[];
   lHand: Note[];
 };
 
-export type ScaleDegreeVoicing = Voicing<ScaleDegree>;
+export type ScaleDegreeVoicing = VoicingWithBassSeparation<ScaleDegree>;
 
-export type PitchClassVoicing = Voicing<PitchClass>;
+export type PitchClassVoicing = VoicingWithBassSeparation<PitchClass>;
 
-export type AbcPitchVoicing = Voicing<AbcPitch>;
+export type AbcPitchVoicing = PianoVoicing<AbcPitch>;
